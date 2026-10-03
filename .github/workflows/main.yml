@@ -18,22 +18,24 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Grant execute permission for gradlew
-        run: |
-          if [ -f "./gradlew" ]; then
-            chmod +x gradlew
-          fi
-
-      - name: Fix KSP and Gradle settings
+      - name: Prepare build properties
         run: |
           echo "ksp.incremental=false" >> gradle.properties
-          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED" >> gradle.properties
+          echo "org.gradle.parallel=false" >> gradle.properties
+          echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=1024m" >> gradle.properties
 
       - name: Build with Gradle
-        run: ./gradlew assembleDebug --no-daemon -Dksp.incremental=false
+        run: |
+          if [ -f "./gradlew" ]; then
+            sed -i 's/\r$//' ./gradlew
+            chmod +x ./gradlew
+            ./gradlew assembleDebug --no-daemon -Dksp.incremental=false
+          else
+            gradle assembleDebug --no-daemon -Dksp.incremental=false
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: quran-app-debug
-          path: app/build/outputs/apk/debug/*.apk
+          path: "**/build/outputs/apk/**/*.apk"
