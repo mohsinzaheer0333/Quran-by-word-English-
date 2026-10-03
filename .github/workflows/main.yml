@@ -24,13 +24,13 @@ jobs:
             chmod +x gradlew
           fi
 
-      - name: Build with Gradle
+      - name: Fix KSP and Gradle settings
         run: |
-          if [ -f "./gradlew" ]; then
-            ./gradlew assembleDebug
-          else
-            gradle assembleDebug
-          fi
+          echo "ksp.incremental=false" >> gradle.properties
+          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED" >> gradle.properties
+
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug --no-daemon -Dksp.incremental=false
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
