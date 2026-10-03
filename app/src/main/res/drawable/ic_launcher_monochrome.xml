@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Ambient Geometric Halo (Monochrome 25%) -->
+    <path
+        android:pathData="M54,23 L63,33 L77,33 L71,46 L79,57 L68,64 L68,78 L54,72 L40,78 L40,64 L29,57 L37,46 L31,33 L45,33 Z"
+        android:strokeWidth="0.9"
+        android:strokeColor="#40FFFFFF"
+        android:fillColor="#00000000" />
+
+    <!-- Architectural Pedestal Rehal (Monochrome 70%) -->
+    <path
+        android:pathData="M37,81 L44,81 L56,69 L53,66 L37,81 Z"
+        android:fillColor="#B3FFFFFF" />
+    <path
+        android:pathData="M71,81 L64,81 L52,69 L55,66 L71,81 Z"
+        android:fillColor="#B3FFFFFF" />
+    <path
+        android:pathData="M54,71.5 L56.5,74 L54,76.5 L51.5,74 Z"
+        android:fillColor="#FFFFFF" />
+
+    <!-- Open Quran Foundation (Monochrome 80%) -->
+    <path
+        android:pathData="M27,59 C35,66 48,68 54,71 C60,68 73,66 81,59 L80,62 C72,69 60,71 54,73 C48,71 36,69 28,62 Z"
+        android:fillColor="#CCFFFFFF" />
+
+    <!-- Open Quran Leaves (Monochrome 100% White) -->
+    <!-- Left Wing -->
+    <path
+        android:pathData="M54,69 C48,66 36,64 28,56 C28,50 34,42 41,37 C48,32 52,28 54,26 C53,35 48,46 44,53 C49,58 52,63 54,69 Z"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M54,69 C51,63 48,58 44,53 C48,46 53,35 54,26 L54,69 Z"
+        android:fillColor="#B3FFFFFF" />
+
+    <!-- Right Wing -->
+    <path
+        android:pathData="M54,69 C60,66 72,64 80,56 C80,50 74,42 67,37 C60,32 56,28 54,26 C55,35 60,46 64,53 C59,58 56,63 54,69 Z"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M54,69 C57,63 60,58 64,53 C60,46 55,35 54,26 L54,69 Z"
+        android:fillColor="#B3FFFFFF" />
+
+    <!-- Golden Arch Ribbons (Monochrome 85%) -->
+    <path
+        android:pathData="M54,26 C51,32 46,38 41,41 C36,44 31,48 29,54 C31,52 38,47 43,44 C48,41 52,34 54,29 Z"
+        android:fillColor="#D9FFFFFF" />
+    <path
+        android:pathData="M54,26 C57,32 62,38 67,41 C72,44 77,48 79,54 C77,52 70,47 65,44 C60,41 56,34 54,29 Z"
+        android:fillColor="#D9FFFFFF" />
+
+    <!-- Center Ribbon Tassel -->
+    <path
+        android:pathData="M53.2,69 C53.2,73 54.5,76 54.2,80 L55.8,80 C55.5,76 54.8,73 54.8,69 Z"
+        android:fillColor="#E6FFFFFF" />
+    <path
+        android:pathData="M53.5,80 L55,82 L56.5,80 Z"
+        android:fillColor="#FFFFFF" />
+
+    <!-- Central Star Rosette (Monochrome Full Contrast) -->
+    <path
+        android:pathData="M50,40 L58,40 L58,48 L50,48 Z"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M54,38.3 L59.7,44 L54,49.7 L48.3,44 Z"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M54,41.2 L56.8,44 L54,46.8 L51.2,44 Z"
+        android:fillColor="#66000000" />
+    <path
+        android:pathData="M54,43 L55,44 L54,45 L53,44 Z"
+        android:fillColor="#FFFFFF" />
+
+</vector>

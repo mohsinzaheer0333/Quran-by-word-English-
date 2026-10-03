@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Velvet Twilight Gradient -->
+    <linearGradient id="twilightGrad" x1="90" y1="50" x2="422" y2="462" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0F1B26"/>
+      <stop offset="45%" stop-color="#081017"/>
+      <stop offset="100%" stop-color="#03060A"/>
+    </linearGradient>
+
+    <!-- Center Soft Radial Glow -->
+    <radialGradient id="centerGlow" cx="256" cy="245" r="215" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#182E40" stop-opacity="0.85"/>
+      <stop offset="65%" stop-color="#081017" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Refined Champagne Gold Gradient -->
+    <linearGradient id="champagneGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFF2D4"/>
+      <stop offset="35%" stop-color="#DFC07C"/>
+      <stop offset="70%" stop-color="#C5A059"/>
+      <stop offset="100%" stop-color="#9E7B36"/>
+    </linearGradient>
+
+    <!-- Warm Luminous Ivory Leaf Gradient -->
+    <linearGradient id="leafGradLeft" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FAF6ED"/>
+      <stop offset="85%" stop-color="#FFFDF9"/>
+      <stop offset="100%" stop-color="#E2D4BD"/>
+    </linearGradient>
+    <linearGradient id="leafGradRight" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#E2D4BD"/>
+      <stop offset="15%" stop-color="#FFFDF9"/>
+      <stop offset="100%" stop-color="#FAF6ED"/>
+    </linearGradient>
+
+    <!-- Depth Shadow -->
+    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="130%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#010406" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- 1. Background Base -->
+  <rect width="512" height="512" rx="112" fill="url(#twilightGrad)"/>
+  <rect width="512" height="512" rx="112" fill="url(#centerGlow)"/>
+
+  <!-- 2. Outer Octagonal Hairline Frame -->
+  <polygon points="162,85 350,85 427,162 427,350 350,427 162,427 85,350 85,162"
+           stroke="#1C364A" stroke-width="2.5" fill="none"/>
+
+  <!-- 3. Ambient 8-Pointed Star Lattice -->
+  <polygon points="256,110 298,156 365,156 336,218 375,270 323,304 323,370 256,342 189,370 189,304 137,270 176,218 147,156 214,156"
+           stroke="#2A4234" stroke-width="2" fill="none"/>
+
+  <!-- Emblem Group with Shadow -->
+  <g filter="url(#softShadow)">
+    <!-- 4. Pedestal Rehal Stand (Sculpted Modern Bronze/Gold) -->
+    <ellipse cx="256" cy="398" rx="105" ry="12" fill="#02060A" fill-opacity="0.5"/>
+    <!-- Left Leg -->
+    <polygon points="175,384 208,384 265,327 251,313" fill="#967232"/>
+    <polygon points="185,379 208,384 256,332 242,322" fill="#BA934A"/>
+    <!-- Right Leg -->
+    <polygon points="337,384 304,384 247,327 261,313" fill="#CBA255"/>
+    <polygon points="327,379 304,384 256,332 270,322" fill="#E5C57E"/>
+    <!-- Center Pivot Diamond Jewel -->
+    <polygon points="256,339 268,351 256,363 244,351" fill="#F6E7BA"/>
+
+    <!-- 5. Quran Foundation Trim (Emerald & Gold) -->
+    <polygon points="128,280 256,337 384,280 379,294 256,346 133,294" fill="#092E22"/>
+    <polygon points="133,275 256,332 379,275 375,284 256,337 137,284" fill="#D8B568"/>
+
+    <!-- 6. Open Quran Main Leaves (Luminous Ivory) -->
+    <!-- Left Page Wing -->
+    <path d="M256,327 C228,313 171,304 133,265 C133,237 162,199 195,175 C228,151 247,133 256,123 Z"
+          fill="url(#leafGradLeft)"/>
+    <!-- Right Page Wing -->
+    <path d="M256,327 C284,313 341,304 379,265 C379,237 350,199 317,175 C284,151 265,133 256,123 Z"
+          fill="url(#leafGradRight)"/>
+
+    <!-- 7. Sculpted Champagne Gold Arch Ribbons (Mihrab Profile) -->
+    <!-- Left Mihrab Ribbon -->
+    <path d="M256,123 C242,151 218,180 195,195 C171,208 147,228 137,256 C147,246 180,223 204,208 C228,195 247,162 256,137 Z"
+          fill="url(#champagneGold)"/>
+    <!-- Right Mihrab Ribbon -->
+    <path d="M256,123 C270,151 294,180 317,195 C341,208 365,228 375,256 C365,246 332,223 308,208 C284,195 265,162 256,137 Z"
+          fill="url(#champagneGold)"/>
+
+    <!-- 8. Stepped Meaning Facets -->
+    <rect x="165" y="265" width="35" height="8" rx="3" fill="#EAD8A6"/>
+    <rect x="180" y="280" width="32" height="7" rx="3" fill="#EAD8A6"/>
+    <rect x="312" y="265" width="35" height="8" rx="3" fill="#EAD8A6"/>
+    <rect x="300" y="280" width="32" height="7" rx="3" fill="#EAD8A6"/>
+
+    <!-- 9. Central Bookmark Ribbon Tassel -->
+    <polygon points="253,327 259,327 260,380 254,380" fill="#E5C77A"/>
+    <polygon points="253,380 257,390 261,380" fill="#C49F4E"/>
+
+    <!-- 10. Central Luminous Star Rosette (Rub-el-Hizb & Noor Jewel) -->
+    <circle cx="256" cy="208" r="32" fill="#1B382A" fill-opacity="0.4"/>
+    <rect x="236" y="188" width="40" height="40" rx="3" fill="#DFC07C"/>
+    <polygon points="256,180 284,208 256,236 228,208" fill="#EDD496"/>
+    <polygon points="256,195 269,208 256,221 243,208" fill="#FFFDF8"/>
+    <circle cx="256" cy="208" r="4" fill="#B38E37"/>
+  </g>
+</svg>

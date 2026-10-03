@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 1. Ambient Geometric Halo (Subtle Champagne Gold Radiance) -->
+    <!-- Concentric 8-pointed diamond/star outline -->
+    <path
+        android:pathData="M54,23 L63,33 L77,33 L71,46 L79,57 L68,64 L68,78 L54,72 L40,78 L40,64 L29,57 L37,46 L31,33 L45,33 Z"
+        android:strokeWidth="0.9"
+        android:strokeColor="#35DFC07C"
+        android:fillColor="#00000000" />
+
+    <!-- 2. Architectural Pedestal Base (Modern Minimalist Rehal Silhouette) -->
+    <!-- Soft floor shadow -->
+    <path
+        android:pathData="M34,83 C44,85 64,85 74,83 C64,84 44,84 34,83 Z"
+        android:fillColor="#40000000" />
+
+    <!-- Left Leg of Rehal -->
+    <path
+        android:pathData="M37,81 L44,81 L56,69 L53,66 L37,81 Z"
+        android:fillColor="#967232" />
+    <path
+        android:pathData="M39,80 L44,81 L54,70 L51,68 Z"
+        android:fillColor="#BA934A" />
+
+    <!-- Right Leg of Rehal -->
+    <path
+        android:pathData="M71,81 L64,81 L52,69 L55,66 L71,81 Z"
+        android:fillColor="#CBA255" />
+    <path
+        android:pathData="M69,80 L64,81 L54,70 L57,68 Z"
+        android:fillColor="#E5C57E" />
+
+    <!-- Center Pivot Jewel -->
+    <path
+        android:pathData="M54,71.5 L56.5,74 L54,76.5 L51.5,74 Z"
+        android:fillColor="#F6E7BA" />
+
+    <!-- 3. Open Quran - Base Foundation & Stepped Word-by-Word Folios -->
+    <!-- Outer Book Binding Edge (Rich Deep Teal / Emerald Trim) -->
+    <path
+        android:pathData="M27,59 C35,66 48,68 54,71 C60,68 73,66 81,59 L80,62 C72,69 60,71 54,73 C48,71 36,69 28,62 Z"
+        android:fillColor="#0B382A" />
+
+    <!-- Lower Gold Gilt Page Rim -->
+    <path
+        android:pathData="M28,58 C36,65 47,67 54,70 C61,67 72,65 80,58 L79,60 C71,67 60,69 54,71 C48,69 37,67 29,60 Z"
+        android:fillColor="#D8B568" />
+
+    <!-- 4. Open Quran Main Page Leaves (Warm Luminous Ivory & Architectural Wings) -->
+    <!-- Left Wing Solid Leaf -->
+    <path
+        android:pathData="M54,69 C48,66 36,64 28,56 C28,50 34,42 41,37 C48,32 52,28 54,26 C53,35 48,46 44,53 C49,58 52,63 54,69 Z"
+        android:fillColor="#FAF6ED" />
+    <!-- Left Wing Shadow Depth -->
+    <path
+        android:pathData="M54,69 C51,63 48,58 44,53 C48,46 53,35 54,26 L54,69 Z"
+        android:fillColor="#E4D7C0" />
+
+    <!-- Right Wing Solid Leaf (Mirrored with subtle lighting shift) -->
+    <path
+        android:pathData="M54,69 C60,66 72,64 80,56 C80,50 74,42 67,37 C60,32 56,28 54,26 C55,35 60,46 64,53 C59,58 56,63 54,69 Z"
+        android:fillColor="#FFFDF9" />
+    <!-- Right Wing Soft Tone -->
+    <path
+        android:pathData="M54,69 C57,63 60,58 64,53 C60,46 55,35 54,26 L54,69 Z"
+        android:fillColor="#F0E5D3" />
+
+    <!-- 5. Sculpted Champagne Gold Arch Ribbons (The Mihrab / Portal Silhouette) -->
+    <!-- Left Golden Arch Contour -->
+    <path
+        android:pathData="M54,26 C51,32 46,38 41,41 C36,44 31,48 29,54 C31,52 38,47 43,44 C48,41 52,34 54,29 Z"
+        android:fillColor="#C8A458" />
+    <path
+        android:pathData="M54,26 C53,28 49,34 44,38 C39,42 33,46 30,51 C32,48 38,44 43,40 C48,36 52,30 54,26 Z"
+        android:fillColor="#F6E7BE" />
+
+    <!-- Right Golden Arch Contour -->
+    <path
+        android:pathData="M54,26 C57,32 62,38 67,41 C72,44 77,48 79,54 C77,52 70,47 65,44 C60,41 56,34 54,29 Z"
+        android:fillColor="#DDBB71" />
+    <path
+        android:pathData="M54,26 C55,28 59,34 64,38 C69,42 75,46 78,51 C76,48 70,44 65,40 C60,36 56,30 54,26 Z"
+        android:fillColor="#FFF0CE" />
+
+    <!-- 6. Stepped Word-by-Word Facet Ribbons (Subtle tiers representing granular study) -->
+    <!-- Left Step Accent -->
+    <path
+        android:pathData="M33,56 L41,56 L47,61 L39,61 Z"
+        android:fillColor="#15DFC07C" />
+    <path
+        android:pathData="M37,59 L43,59 L48,63 L42,63 Z"
+        android:fillColor="#25DFC07C" />
+
+    <!-- Right Step Accent -->
+    <path
+        android:pathData="M75,56 L67,56 L61,61 L69,61 Z"
+        android:fillColor="#15DFC07C" />
+    <path
+        android:pathData="M71,59 L65,59 L60,63 L66,63 Z"
+        android:fillColor="#25DFC07C" />
+
+    <!-- Center Bookmark Ribbon (Tassel) -->
+    <path
+        android:pathData="M53.2,69 C53.2,73 54.5,76 54.2,80 L55.8,80 C55.5,76 54.8,73 54.8,69 Z"
+        android:fillColor="#E5C77A" />
+    <path
+        android:pathData="M53.5,80 L55,82 L56.5,80 Z"
+        android:fillColor="#C49F4E" />
+
+    <!-- 7. The Central Luminous Star Rosette (Rub el Hizb / Light of Truth) -->
+    <!-- Soft Glow behind Star -->
+    <path
+        android:pathData="M54,38 L60,44 L54,50 L48,44 Z"
+        android:fillColor="#35DFC07C" />
+
+    <!-- Outer 8-Pointed Star (Champagne Gold) -->
+    <!-- Square 1 -->
+    <path
+        android:pathData="M50,40 L58,40 L58,48 L50,48 Z"
+        android:fillColor="#DFC07C" />
+    <!-- Square 2 (Rotated 45 degrees) -->
+    <path
+        android:pathData="M54,38.3 L59.7,44 L54,49.7 L48.3,44 Z"
+        android:fillColor="#EDD496" />
+
+    <!-- Inner Micro Diamond (Warm Luminous White Pearl) -->
+    <path
+        android:pathData="M54,41.2 L56.8,44 L54,46.8 L51.2,44 Z"
+        android:fillColor="#FFFDF8" />
+
+    <!-- Tiny Center Gold Core -->
+    <path
+        android:pathData="M54,43 L55,44 L54,45 L53,44 Z"
+        android:fillColor="#B38E37" />
+
+</vector>

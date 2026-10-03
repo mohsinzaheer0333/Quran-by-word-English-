@@ -1,0 +1,6 @@
+{
+  "name": "Quran by Word English",
+  "description": "A premium Quran reading experience with word-by-word translations, continuous and swipe reading modes, auto-scroll, and 30 Juz.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
