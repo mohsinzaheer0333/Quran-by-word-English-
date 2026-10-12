@@ -1,8 +1,11 @@
 package com.example.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Metadata for a Quranic Juz (Para).
  */
+@Immutable
 data class JuzInfo(
   val number: Int,
   val arabicName: String,

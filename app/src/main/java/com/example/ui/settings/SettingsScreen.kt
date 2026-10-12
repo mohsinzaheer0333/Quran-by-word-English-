@@ -158,7 +158,7 @@ fun SettingsScreen(
             text = if (readingMode == ReadingMode.CONTINUOUS) {
               "Continuous Scroll: Smooth vertical scrolling through all ayahs with word cards and auto-scroll."
             } else {
-              "Page-Turn / Swipe: Focused single-verse reading. Turn pages horizontally or with buttons."
+              "Page-Turn / Swipe: Authentic Arabic Mushaf reading. Swipe from Left to Right to turn forward to next Ayah."
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -192,7 +192,7 @@ fun SettingsScreen(
             Slider(
               value = arabicFontSize,
               onValueChange = { preferencesRepository.setArabicFontSize(it) },
-              valueRange = 22f..42f,
+              valueRange = 20f..44f,
               modifier = Modifier.testTag("settings_arabic_slider")
             )
             // Live Preview
@@ -221,7 +221,7 @@ fun SettingsScreen(
               horizontalArrangement = Arrangement.SpaceBetween
             ) {
               Text(
-                text = "English Translation",
+                text = "English Translation Size",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurface
               )
@@ -234,9 +234,27 @@ fun SettingsScreen(
             Slider(
               value = translationFontSize,
               onValueChange = { preferencesRepository.setTranslationFontSize(it) },
-              valueRange = 13f..24f,
+              valueRange = 12f..26f,
               modifier = Modifier.testTag("settings_trans_slider")
             )
+            // Live Preview for Translation
+            Box(
+              modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .padding(8.dp),
+              contentAlignment = Alignment.Center
+            ) {
+              Text(
+                text = "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
+                fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
+                fontSize = translationFontSize.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+              )
+            }
           }
         }
       }
@@ -246,7 +264,7 @@ fun SettingsScreen(
         title = "AUTO-SCROLL SPEED",
         icon = Icons.Default.Speed
       ) {
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -257,7 +275,15 @@ fun SettingsScreen(
               color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-              text = String.format("%.1fx", autoScrollSpeed),
+              text = "Speed ${autoScrollSpeed.toInt()} / 10 • ${
+                when (autoScrollSpeed.toInt()) {
+                  in 1..2 -> "Very Slow"
+                  in 3..4 -> "Slow"
+                  in 5..6 -> "Normal"
+                  in 7..8 -> "Fast"
+                  else -> "Very Fast"
+                }
+              }",
               style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
               color = MaterialTheme.colorScheme.secondary
             )
@@ -265,8 +291,8 @@ fun SettingsScreen(
           Slider(
             value = autoScrollSpeed,
             onValueChange = { preferencesRepository.setAutoScrollSpeed(it) },
-            valueRange = 0.5f..3.0f,
-            steps = 9,
+            valueRange = 1.0f..10.0f,
+            steps = 8,
             modifier = Modifier.testTag("settings_auto_scroll_slider")
           )
         }

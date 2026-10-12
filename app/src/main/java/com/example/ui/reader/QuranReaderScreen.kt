@@ -8,8 +8,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,12 +34,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ViewStream
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,30 +55,40 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.repository.PreferencesRepository
 import com.example.model.ReadingMode
 import com.example.ui.reader.components.AutoScrollControls
 import com.example.ui.reader.components.AyahCard
 import com.example.ui.reader.components.ReadingModeToggleBar
-import com.example.ui.reader.state.ReadingViewStateManager
 import com.example.ui.reader.state.rememberReadingViewStateManager
 import com.example.ui.theme.AmiriFontFamily
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -81,13 +96,17 @@ import kotlinx.coroutines.launch
 @Composable
 fun QuranReaderScreen(
   viewModel: ReaderViewModel,
+  preferencesRepository: PreferencesRepository,
   juzNumber: Int,
   initialAyahIndex: Int,
   onNavigateBack: () -> Unit,
   modifier: Modifier = Modifier
 ) {
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-  val scope = rememberCoroutineScope()
+  val arabicFontSize by preferencesRepository.arabicFontSize.collectAsStateWithLifecycle()
+  val translationFontSize by preferencesRepository.translationFontSize.collectAsStateWithLifecycle()
+  val autoScrollSpeed by preferencesRepository.autoScrollSpeed.collectAsStateWithLifecycle()
+
   var showFontSizeSheet by remember { mutableStateOf(false) }
 
   LaunchedEffect(juzNumber, initialAyahIndex) {
@@ -168,7 +187,7 @@ fun QuranReaderScreen(
             }
           }
 
-          // Font Sizing Sheet
+          // Font Sizing Sheet (TT button)
           IconButton(
             onClick = { showFontSizeSheet = true },
             modifier = Modifier.testTag("font_size_sheet_button")
@@ -237,7 +256,7 @@ fun QuranReaderScreen(
             AnimatedContent(
               targetState = viewStateManager.currentMode,
               transitionSpec = {
-                fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
+                fadeIn(animationSpec = tween(200)) togetherWith fadeOut(animationSpec = tween(150))
               },
               label = "reading_mode_switch_transition",
               modifier = Modifier.fillMaxSize()
@@ -248,13 +267,14 @@ fun QuranReaderScreen(
                     ayahs = uiState.ayahs,
                     listState = viewStateManager.lazyListState,
                     bookmarkedKeys = uiState.bookmarkedVerseKeys,
-                    arabicFontSize = uiState.arabicFontSize,
-                    translationFontSize = uiState.translationFontSize,
+                    arabicFontSize = arabicFontSize,
+                    translationFontSize = translationFontSize,
                     isAutoScrollActive = uiState.isAutoScrollActive,
                     isAutoScrollPlaying = uiState.isAutoScrollPlaying,
-                    autoScrollSpeed = uiState.autoScrollSpeed,
+                    autoScrollSpeed = autoScrollSpeed,
                     onToggleBookmark = { ayah -> viewModel.toggleBookmark(ayah) },
-                    onAyahVisible = { index -> viewStateManager.onAyahVisible(index) }
+                    onAyahVisible = { index -> viewStateManager.onAyahVisible(index) },
+                    onPauseAutoScroll = { viewModel.pauseAutoScroll() }
                   )
                 }
                 ReadingMode.SWIPE -> {
@@ -262,8 +282,8 @@ fun QuranReaderScreen(
                     ayahs = uiState.ayahs,
                     pagerState = viewStateManager.pagerState,
                     bookmarkedKeys = uiState.bookmarkedVerseKeys,
-                    arabicFontSize = uiState.arabicFontSize,
-                    translationFontSize = uiState.translationFontSize,
+                    arabicFontSize = arabicFontSize,
+                    translationFontSize = translationFontSize,
                     onToggleBookmark = { ayah -> viewModel.toggleBookmark(ayah) },
                     onPageChanged = { index -> viewStateManager.onAyahVisible(index) }
                   )
@@ -285,17 +305,17 @@ fun QuranReaderScreen(
       ) {
         AutoScrollControls(
           isPlaying = uiState.isAutoScrollPlaying,
-          currentSpeed = uiState.autoScrollSpeed,
+          currentSpeed = autoScrollSpeed,
           onTogglePlay = { viewModel.toggleAutoScrollPlay() },
-          onSpeedDecrease = { viewModel.decreaseAutoScrollSpeed() },
-          onSpeedIncrease = { viewModel.increaseAutoScrollSpeed() },
+          onSpeedDecrease = { preferencesRepository.setAutoScrollSpeed((autoScrollSpeed - 1f).coerceAtLeast(1f)) },
+          onSpeedIncrease = { preferencesRepository.setAutoScrollSpeed((autoScrollSpeed + 1f).coerceAtMost(10f)) },
           onClose = { viewModel.closeAutoScroll() }
         )
       }
     }
   }
 
-  // Quick Font Size Adjustment Sheet
+  // Quick Font Size Adjustment Sheet (Connected to live state for immediate re-render)
   if (showFontSizeSheet) {
     ModalBottomSheet(
       onDismissRequest = { showFontSizeSheet = false },
@@ -308,39 +328,131 @@ fun QuranReaderScreen(
           .padding(horizontal = 24.dp, vertical = 16.dp)
           .padding(bottom = 32.dp)
       ) {
-        Text(
-          text = "Reading Typography",
-          style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-          color = MaterialTheme.colorScheme.onSurface
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Text(
+            text = "Reading Typography",
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface
+          )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Arabic Font Size with Stepper Buttons
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Text(
+            text = "Arabic Quran Text Size: ${arabicFontSize.toInt()} sp",
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onSurface
+          )
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+              onClick = { preferencesRepository.setArabicFontSize((arabicFontSize - 1f).coerceIn(20f, 44f)) },
+              enabled = arabicFontSize > 20f,
+              modifier = Modifier.size(32.dp).testTag("arabic_font_decrease_button")
+            ) {
+              Icon(Icons.Default.Remove, contentDescription = "Decrease Arabic Size", tint = MaterialTheme.colorScheme.primary)
+            }
+            IconButton(
+              onClick = { preferencesRepository.setArabicFontSize((arabicFontSize + 1f).coerceIn(20f, 44f)) },
+              enabled = arabicFontSize < 44f,
+              modifier = Modifier.size(32.dp).testTag("arabic_font_increase_button")
+            ) {
+              Icon(Icons.Default.Add, contentDescription = "Increase Arabic Size", tint = MaterialTheme.colorScheme.primary)
+            }
+          }
+        }
+        Slider(
+          value = arabicFontSize,
+          onValueChange = { preferencesRepository.setArabicFontSize(it) },
+          valueRange = 20f..44f,
+          modifier = Modifier.testTag("arabic_font_slider")
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Translation Font Size with Stepper Buttons
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Text(
+            text = "Translation Text Size: ${translationFontSize.toInt()} sp",
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onSurface
+          )
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+              onClick = { preferencesRepository.setTranslationFontSize((translationFontSize - 1f).coerceIn(12f, 26f)) },
+              enabled = translationFontSize > 12f,
+              modifier = Modifier.size(32.dp).testTag("translation_font_decrease_button")
+            ) {
+              Icon(Icons.Default.Remove, contentDescription = "Decrease Translation Size", tint = MaterialTheme.colorScheme.primary)
+            }
+            IconButton(
+              onClick = { preferencesRepository.setTranslationFontSize((translationFontSize + 1f).coerceIn(12f, 26f)) },
+              enabled = translationFontSize < 26f,
+              modifier = Modifier.size(32.dp).testTag("translation_font_increase_button")
+            ) {
+              Icon(Icons.Default.Add, contentDescription = "Increase Translation Size", tint = MaterialTheme.colorScheme.primary)
+            }
+          }
+        }
+        Slider(
+          value = translationFontSize,
+          onValueChange = { preferencesRepository.setTranslationFontSize(it) },
+          valueRange = 12f..26f,
+          modifier = Modifier.testTag("translation_font_slider")
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Arabic Font Size
-        Text(
-          text = "Arabic Quran Text Size: ${uiState.arabicFontSize.toInt()} sp",
-          style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-          color = MaterialTheme.colorScheme.onSurface
-        )
-        Slider(
-          value = uiState.arabicFontSize,
-          onValueChange = { /* Updated via viewmodel */ },
-          valueRange = 22f..42f,
-          modifier = Modifier.testTag("arabic_font_slider")
-        )
-
-        // Translation Font Size
-        Text(
-          text = "English Translation Size: ${uiState.translationFontSize.toInt()} sp",
-          style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-          color = MaterialTheme.colorScheme.onSurface
-        )
-        Slider(
-          value = uiState.translationFontSize,
-          onValueChange = { /* Updated via viewmodel */ },
-          valueRange = 13f..24f,
-          modifier = Modifier.testTag("translation_font_slider")
-        )
+        // Live Real-Time Preview Card
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+            .padding(14.dp)
+        ) {
+          Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+              text = "Live Preview",
+              style = MaterialTheme.typography.labelSmall,
+              color = MaterialTheme.colorScheme.secondary,
+              fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+              text = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+              fontFamily = AmiriFontFamily,
+              fontSize = arabicFontSize.sp,
+              fontWeight = FontWeight.Bold,
+              color = MaterialTheme.colorScheme.primary,
+              textAlign = TextAlign.Right,
+              modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+              text = "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
+              fontFamily = MaterialTheme.typography.bodyMedium.fontFamily,
+              fontSize = translationFontSize.sp,
+              color = MaterialTheme.colorScheme.onSurface,
+              textAlign = TextAlign.Left,
+              modifier = Modifier.fillMaxWidth()
+            )
+          }
+        }
       }
     }
   }
@@ -357,22 +469,49 @@ private fun ContinuousReaderView(
   isAutoScrollPlaying: Boolean,
   autoScrollSpeed: Float,
   onToggleBookmark: (com.example.model.Ayah) -> Unit,
-  onAyahVisible: (Int) -> Unit
+  onAyahVisible: (Int) -> Unit,
+  onPauseAutoScroll: () -> Unit
 ) {
-  // Track currently visible Ayah
-  val firstVisibleItemIndex by remember { derivedStateOf { listState.firstVisibleItemIndex } }
-  LaunchedEffect(firstVisibleItemIndex) {
-    onAyahVisible(firstVisibleItemIndex)
+  val density = LocalDensity.current
+
+  // Track currently visible Ayah via snapshotFlow with debounce to eliminate rapid state churn
+  LaunchedEffect(listState) {
+    snapshotFlow { listState.firstVisibleItemIndex }
+      .distinctUntilChanged()
+      .collectLatest { index ->
+        delay(200L) // Debounce rapid micro-scroll events
+        onAyahVisible(index)
+      }
   }
 
-  // Auto Scroll Coroutine
-  LaunchedEffect(isAutoScrollActive, isAutoScrollPlaying, autoScrollSpeed) {
+  // Smooth 60/120 fps Frame Paced Auto-Scroll scaled cleanly across levels 1 to 10
+  LaunchedEffect(isAutoScrollActive, isAutoScrollPlaying, autoScrollSpeed, listState) {
     if (isAutoScrollActive && isAutoScrollPlaying) {
-      while (isActive) {
-        if (!listState.isScrollInProgress) {
-          listState.scrollBy(2.5f * autoScrollSpeed)
+      // Linear scaling: Level 1 = 16 dp/sec (very slow reading), Level 5 = 62 dp/sec (normal reading), Level 10 = 120 dp/sec (fast reading)
+      val speedDpPerSec = 16f + ((autoScrollSpeed - 1f) * (104f / 9f))
+      val speedPixelsPerSec = with(density) { speedDpPerSec.dp.toPx() }
+      while (isActive && isAutoScrollActive && isAutoScrollPlaying) {
+        try {
+          listState.scroll(MutatePriority.Default) {
+            var lastFrameNanos = 0L
+            while (isActive && isAutoScrollActive && isAutoScrollPlaying) {
+              withFrameNanos { frameTimeNanos ->
+                if (lastFrameNanos != 0L) {
+                  val dtSeconds = (frameTimeNanos - lastFrameNanos) / 1_000_000_000f
+                  val clampedDt = dtSeconds.coerceIn(0f, 0.05f)
+                  val delta = speedPixelsPerSec * clampedDt
+                  scrollBy(delta)
+                }
+                lastFrameNanos = frameTimeNanos
+              }
+            }
+          }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+          if (!isActive) throw e
+          delay(400L)
+        } catch (_: Exception) {
+          delay(200L)
         }
-        delay(30L)
       }
     }
   }
@@ -381,13 +520,27 @@ private fun ContinuousReaderView(
     state = listState,
     modifier = Modifier
       .fillMaxSize()
-      .testTag("continuous_reader_list"),
+      .testTag("continuous_reader_list")
+      .pointerInput(isAutoScrollActive, isAutoScrollPlaying) {
+        if (isAutoScrollActive && isAutoScrollPlaying) {
+          awaitPointerEventScope {
+            while (true) {
+              val event = awaitPointerEvent(PointerEventPass.Initial)
+              if (event.changes.any { it.pressed }) {
+                onPauseAutoScroll()
+                break
+              }
+            }
+          }
+        }
+      },
     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp),
     verticalArrangement = Arrangement.spacedBy(16.dp)
   ) {
     itemsIndexed(
       items = ayahs,
-      key = { _, item -> item.verseKey }
+      key = { _, item -> item.verseKey },
+      contentType = { _, _ -> "ayah_card" }
     ) { _, ayah ->
       AyahCard(
         ayah = ayah,
@@ -400,6 +553,13 @@ private fun ContinuousReaderView(
   }
 }
 
+/**
+ * Page-Turn / Swipe Reader View with authentic Arabic Quran (Mushaf) reading order:
+ * - LayoutDirection is RTL (Right-to-Left) like an open physical Quran
+ * - Swiping finger from LEFT to RIGHT navigates forward to the NEXT page/ayah
+ * - Swiping finger from RIGHT to LEFT navigates back to the PREVIOUS page/ayah
+ * - Pre-caches adjacent page (beyondViewportPageCount = 1) for stutter-free 60/120fps flips
+ */
 @Composable
 private fun SwipeReaderView(
   ayahs: List<com.example.model.Ayah>,
@@ -412,94 +572,109 @@ private fun SwipeReaderView(
 ) {
   val scope = rememberCoroutineScope()
 
-  LaunchedEffect(pagerState.currentPage) {
-    onPageChanged(pagerState.currentPage)
+  LaunchedEffect(pagerState) {
+    snapshotFlow { pagerState.currentPage }
+      .distinctUntilChanged()
+      .collectLatest { page ->
+        delay(100L) // Debounce rapid swipe turns
+        onPageChanged(page)
+      }
   }
 
-  Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .testTag("swipe_reader_view")
-  ) {
-    // Horizontal Ayah Pager
-    HorizontalPager(
-      state = pagerState,
+  // Set Right-to-Left (RTL) layout direction to match authentic Arabic Quran Mushaf reading order
+  CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    Column(
       modifier = Modifier
-        .weight(1f)
-        .fillMaxWidth()
-    ) { page ->
-      val ayah = ayahs[page]
+        .fillMaxSize()
+        .testTag("swipe_reader_view")
+    ) {
+      // Horizontal Ayah Pager following authentic Arabic Mushaf swipe flow
+      HorizontalPager(
+        state = pagerState,
+        beyondViewportPageCount = 1,
+        key = { page -> ayahs.getOrNull(page)?.verseKey ?: page },
+        modifier = Modifier
+          .weight(1f)
+          .fillMaxWidth()
+      ) { page ->
+        val ayah = ayahs.getOrNull(page)
+        if (ayah != null) {
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .verticalScroll(rememberScrollState())
+              .padding(horizontal = 16.dp, vertical = 12.dp)
+          ) {
+            AyahCard(
+              ayah = ayah,
+              isBookmarked = bookmarkedKeys.contains(ayah.verseKey),
+              onToggleBookmark = { onToggleBookmark(ayah) },
+              arabicFontSize = arabicFontSize,
+              translationFontSize = translationFontSize
+            )
+          }
+        }
+      }
+
+      // Bottom Navigation Bar for Page-Turn Mode matching Arabic Mushaf order
       Box(
         modifier = Modifier
-          .fillMaxSize()
-          .verticalScroll(rememberScrollState())
+          .fillMaxWidth()
+          .background(MaterialTheme.colorScheme.surface)
           .padding(horizontal = 16.dp, vertical = 12.dp)
       ) {
-        AyahCard(
-          ayah = ayah,
-          isBookmarked = bookmarkedKeys.contains(ayah.verseKey),
-          onToggleBookmark = { onToggleBookmark(ayah) },
-          arabicFontSize = arabicFontSize,
-          translationFontSize = translationFontSize
-        )
-      }
-    }
-
-    // Bottom Navigation Bar for Page-Turn Mode
-    Box(
-      modifier = Modifier
-        .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.surface)
-        .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        IconButton(
-          onClick = {
-            if (pagerState.currentPage > 0) {
-              scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
-            }
-          },
-          enabled = pagerState.currentPage > 0,
-          modifier = Modifier.testTag("swipe_prev_ayah_button")
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
         ) {
-          Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "Previous Ayah",
-            tint = if (pagerState.currentPage > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-          )
-        }
+          // Previous Ayah Button
+          IconButton(
+            onClick = {
+              if (pagerState.currentPage > 0) {
+                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+              }
+            },
+            enabled = pagerState.currentPage > 0,
+            modifier = Modifier.testTag("swipe_prev_ayah_button")
+          ) {
+            Icon(
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+              contentDescription = "Previous Ayah",
+              tint = if (pagerState.currentPage > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+            )
+          }
 
-        Box(
-          modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 14.dp, vertical = 6.dp)
-        ) {
-          Text(
-            text = "Ayah ${pagerState.currentPage + 1} of ${ayahs.size}",
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface
-          )
-        }
+          // Center: Ayah progress indicator
+          Box(
+            modifier = Modifier
+              .clip(RoundedCornerShape(12.dp))
+              .background(MaterialTheme.colorScheme.surfaceVariant)
+              .padding(horizontal = 14.dp, vertical = 6.dp)
+          ) {
+            Text(
+              text = "Ayah ${pagerState.currentPage + 1} of ${ayahs.size}",
+              style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+              color = MaterialTheme.colorScheme.onSurface
+            )
+          }
 
-        IconButton(
-          onClick = {
-            if (pagerState.currentPage < ayahs.size - 1) {
-              scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
-            }
-          },
-          enabled = pagerState.currentPage < ayahs.size - 1,
-          modifier = Modifier.testTag("swipe_next_ayah_button")
-        ) {
-          Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-            contentDescription = "Next Ayah",
-            tint = if (pagerState.currentPage < ayahs.size - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-          )
+          // Next Ayah Button
+          IconButton(
+            onClick = {
+              if (pagerState.currentPage < ayahs.size - 1) {
+                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+              }
+            },
+            enabled = pagerState.currentPage < ayahs.size - 1,
+            modifier = Modifier.testTag("swipe_next_ayah_button")
+          ) {
+            Icon(
+              imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+              contentDescription = "Next Ayah",
+              tint = if (pagerState.currentPage < ayahs.size - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+            )
+          }
         }
       }
     }

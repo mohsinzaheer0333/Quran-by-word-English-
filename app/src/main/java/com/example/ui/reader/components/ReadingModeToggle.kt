@@ -298,7 +298,7 @@ fun ReadingModeToggleBar(
           Text(
             text = when (currentMode) {
               ReadingMode.CONTINUOUS -> "Vertical reading with smooth scrolling, word-by-word cards, and auto-scroll capability."
-              ReadingMode.SWIPE -> "Focused single-verse reading. Swipe horizontally or use navigation arrows to turn pages."
+              ReadingMode.SWIPE -> "Authentic Arabic Quran (Mushaf) reading: Swipe from Left to Right to advance to next Ayah, or use navigation arrows."
             },
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),

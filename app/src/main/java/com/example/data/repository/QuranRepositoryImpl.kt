@@ -7,6 +7,7 @@ import com.example.model.SurahInfo
 import com.example.model.TranslationLanguage
 import com.example.model.WordTranslation
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -19,6 +20,8 @@ class QuranRepositoryImpl(private val context: Context) : QuranRepository {
   private val juzCache = ConcurrentHashMap<Int, List<Ayah>>()
   private var cachedSurahs: List<SurahInfo>? = null
 
+  private val preloadScope = kotlinx.coroutines.CoroutineScope(Dispatchers.IO + kotlinx.coroutines.SupervisorJob())
+
   override fun getAllJuz(): List<JuzInfo> = all30JuzList
 
   override fun getJuzByNumber(number: Int): JuzInfo? =
@@ -28,12 +31,37 @@ class QuranRepositoryImpl(private val context: Context) : QuranRepository {
     val clampedJuz = juzNumber.coerceIn(1, 30)
     
     // Check in-memory cache first for instant retrieval
-    juzCache[clampedJuz]?.let { return it }
+    juzCache[clampedJuz]?.let {
+      preloadNeighbors(clampedJuz)
+      return it
+    }
 
-    return withContext(Dispatchers.IO) {
-      val ayahs = loadJuzFromAssets(clampedJuz)
-      juzCache[clampedJuz] = ayahs
-      ayahs
+    val result = withContext(Dispatchers.IO) {
+      val loadedAyahs = loadJuzFromAssets(clampedJuz)
+      juzCache[clampedJuz] = loadedAyahs
+      loadedAyahs
+    }
+
+    // Pre-cache neighboring Juz in background to guarantee zero page turn latency
+    preloadNeighbors(clampedJuz)
+
+    return result
+  }
+
+  private fun preloadNeighbors(currentJuz: Int) {
+    preloadScope.launch {
+      if (currentJuz > 1 && !juzCache.containsKey(currentJuz - 1)) {
+        try {
+          val prevAyahs = loadJuzFromAssets(currentJuz - 1)
+          juzCache[currentJuz - 1] = prevAyahs
+        } catch (_: Exception) {}
+      }
+      if (currentJuz < 30 && !juzCache.containsKey(currentJuz + 1)) {
+        try {
+          val nextAyahs = loadJuzFromAssets(currentJuz + 1)
+          juzCache[currentJuz + 1] = nextAyahs
+        } catch (_: Exception) {}
+      }
     }
   }
 
@@ -66,12 +94,7 @@ class QuranRepositoryImpl(private val context: Context) : QuranRepository {
 
   override fun getSupportedLanguages(): List<TranslationLanguage> {
     return listOf(
-      TranslationLanguage("en", "English", "English", isAvailable = true),
-      TranslationLanguage("ur", "Urdu", "اردو", isAvailable = false),
-      TranslationLanguage("fr", "French", "Français", isAvailable = false),
-      TranslationLanguage("es", "Spanish", "Español", isAvailable = false),
-      TranslationLanguage("id", "Indonesian", "Bahasa Indonesia", isAvailable = false),
-      TranslationLanguage("tr", "Turkish", "Türkçe", isAvailable = false)
+      TranslationLanguage("en", "English", "English", isAvailable = true)
     )
   }
 

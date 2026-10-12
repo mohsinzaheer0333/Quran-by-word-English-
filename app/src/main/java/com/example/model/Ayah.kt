@@ -1,8 +1,13 @@
 package com.example.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Represents a complete Ayah (verse) of the Quran.
+ * Marked as @Immutable to enable Compose compiler skipping optimizations
+ * and prevent layout thrashing during list scrolling.
  */
+@Immutable
 data class Ayah(
   val surahNumber: Int,
   val ayahNumber: Int,

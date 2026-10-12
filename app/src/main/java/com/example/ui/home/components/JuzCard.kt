@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.JuzInfo
 import com.example.ui.theme.AmiriFontFamily
+
+private val JuzCardShape = RoundedCornerShape(18.dp)
+private val MedallionShape = RoundedCornerShape(12.dp)
+private val VersesBadgeShape = RoundedCornerShape(4.dp)
 
 @Composable
 fun JuzCard(
@@ -40,9 +45,11 @@ fun JuzCard(
   Card(
     modifier = modifier
       .fillMaxWidth()
+      .graphicsLayer()
       .testTag("juz_card_${juz.number}")
-      .clip(RoundedCornerShape(18.dp))
+      .clip(JuzCardShape)
       .clickable { onClick() },
+    shape = JuzCardShape,
     colors = CardDefaults.cardColors(
       containerColor = MaterialTheme.colorScheme.surface
     ),
@@ -54,7 +61,7 @@ fun JuzCard(
         .border(
           width = 1.dp,
           color = MaterialTheme.colorScheme.outlineVariant,
-          shape = RoundedCornerShape(18.dp)
+          shape = JuzCardShape
         )
         .padding(14.dp)
     ) {
@@ -66,12 +73,12 @@ fun JuzCard(
         Box(
           modifier = Modifier
             .size(46.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MedallionShape)
             .background(MaterialTheme.colorScheme.primaryContainer)
             .border(
               width = 1.dp,
               color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-              shape = RoundedCornerShape(12.dp)
+              shape = MedallionShape
             ),
           contentAlignment = Alignment.Center
         ) {
@@ -117,7 +124,7 @@ fun JuzCard(
           Spacer(modifier = Modifier.height(4.dp))
           Box(
             modifier = Modifier
-              .clip(RoundedCornerShape(4.dp))
+              .clip(VersesBadgeShape)
               .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
               .padding(horizontal = 6.dp, vertical = 2.dp)
           ) {

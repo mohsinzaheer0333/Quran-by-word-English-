@@ -13,3 +13,4 @@ interface QuranRepository {
   suspend fun getAllSurahs(): List<SurahInfo>
   fun getSupportedLanguages(): List<TranslationLanguage>
 }
+

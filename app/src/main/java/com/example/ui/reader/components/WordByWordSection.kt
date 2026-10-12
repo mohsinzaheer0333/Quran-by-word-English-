@@ -18,9 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +33,12 @@ import com.example.model.WordTranslation
 import com.example.ui.theme.AmiriFontFamily
 import com.example.ui.theme.OutfitFontFamily
 
+private val WordCardShape = RoundedCornerShape(12.dp)
+private val WordHeaderBadgeShape = RoundedCornerShape(4.dp)
+
+/**
+ * Ultra-fast word-by-word layout with clean English translations.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WordByWordSection(
@@ -43,16 +51,17 @@ fun WordByWordSection(
     // Section Header
     Row(
       verticalAlignment = Alignment.CenterVertically,
-      modifier = Modifier.padding(bottom = 12.dp)
+      modifier = Modifier.padding(bottom = 10.dp)
     ) {
       Box(
         modifier = Modifier
-          .clip(RoundedCornerShape(4.dp))
+          .clip(WordHeaderBadgeShape)
           .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f))
           .padding(horizontal = 8.dp, vertical = 3.dp)
       ) {
         Text(
           text = "WORD BY WORD",
+          fontFamily = OutfitFontFamily,
           style = MaterialTheme.typography.labelSmall.copy(
             letterSpacing = 1.1.sp,
             fontWeight = FontWeight.Bold
@@ -63,7 +72,7 @@ fun WordByWordSection(
       }
     }
 
-    // Word cards wrapping naturally in RTL reading direction
+    // Word cards wrapping naturally in RTL reading direction for Arabic order
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
       FlowRow(
         modifier = Modifier.fillMaxWidth(),
@@ -71,11 +80,13 @@ fun WordByWordSection(
         verticalArrangement = Arrangement.spacedBy(10.dp)
       ) {
         words.forEach { word ->
-          WordCard(
-            word = word,
-            arabicFontSize = arabicFontSize,
-            translationFontSize = translationFontSize
-          )
+          key(word.position) {
+            WordCard(
+              word = word,
+              arabicFontSize = arabicFontSize,
+              translationFontSize = translationFontSize
+            )
+          }
         }
       }
     }
@@ -89,48 +100,45 @@ fun WordCard(
   translationFontSize: Float,
   modifier: Modifier = Modifier
 ) {
-  Box(
+  Column(
     modifier = modifier
-      .widthIn(min = 68.dp)
-      .clip(RoundedCornerShape(12.dp))
+      .widthIn(min = 64.dp)
+      .graphicsLayer() // GPU hardware layer isolation
+      .clip(WordCardShape)
       .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f))
       .border(
         width = 1.dp,
         color = MaterialTheme.colorScheme.outlineVariant,
-        shape = RoundedCornerShape(12.dp)
+        shape = WordCardShape
       )
-      .padding(horizontal = 10.dp, vertical = 8.dp),
-    contentAlignment = Alignment.Center
+      .padding(horizontal = 10.dp, vertical = 7.dp),
+    horizontalAlignment = Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.Center
   ) {
-    Column(
-      horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.Center
-    ) {
-      // Arabic Word on top
-      Text(
-        text = word.arabic,
-        fontFamily = AmiriFontFamily,
-        fontSize = arabicFontSize.sp,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
-        textAlign = TextAlign.Center,
-        lineHeight = (arabicFontSize * 1.5f).sp
-      )
+    // Arabic Word on top
+    Text(
+      text = word.arabic,
+      fontFamily = AmiriFontFamily,
+      fontSize = arabicFontSize.sp,
+      fontWeight = FontWeight.Bold,
+      color = MaterialTheme.colorScheme.primary,
+      textAlign = TextAlign.Center,
+      lineHeight = (arabicFontSize * 1.45f).sp
+    )
 
-      Spacer(modifier = Modifier.height(3.dp))
+    Spacer(modifier = Modifier.height(3.dp))
 
-      // English Meaning underneath
-      CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-        Text(
-          text = word.english,
-          fontFamily = OutfitFontFamily,
-          fontSize = translationFontSize.sp,
-          fontWeight = FontWeight.Normal,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-          textAlign = TextAlign.Center,
-          lineHeight = (translationFontSize * 1.3f).sp
-        )
-      }
-    }
+    // English Meaning underneath
+    Text(
+      text = word.english,
+      fontFamily = OutfitFontFamily,
+      fontSize = translationFontSize.sp,
+      fontWeight = FontWeight.Normal,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+      textAlign = TextAlign.Center,
+      style = MaterialTheme.typography.bodySmall,
+      lineHeight = (translationFontSize * 1.3f).sp
+    )
   }
 }
+

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -98,12 +99,12 @@ fun AutoScrollControls(
             modifier = Modifier
               .testTag("speed_decrease_button")
               .size(36.dp),
-            enabled = currentSpeed > 0.5f
+            enabled = currentSpeed > 1.0f
           ) {
             Icon(
               imageVector = Icons.Default.Remove,
               contentDescription = "Decrease Speed",
-              tint = if (currentSpeed > 0.5f) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+              tint = if (currentSpeed > 1.0f) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
               modifier = Modifier.size(18.dp)
             )
           }
@@ -114,12 +115,26 @@ fun AutoScrollControls(
               .testTag("speed_indicator_badge"),
             contentAlignment = Alignment.Center
           ) {
-            Text(
-              text = String.format("%.1fx", currentSpeed),
-              style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-              color = MaterialTheme.colorScheme.onSurface,
-              fontSize = 13.sp
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+              Text(
+                text = "Speed ${currentSpeed.toInt()}/10",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 12.sp
+              )
+              Text(
+                text = when (currentSpeed.toInt()) {
+                  in 1..2 -> "Very Slow"
+                  in 3..4 -> "Slow"
+                  in 5..6 -> "Normal"
+                  in 7..8 -> "Fast"
+                  else -> "Very Fast"
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                fontSize = 9.sp
+              )
+            }
           }
 
           IconButton(
@@ -127,12 +142,12 @@ fun AutoScrollControls(
             modifier = Modifier
               .testTag("speed_increase_button")
               .size(36.dp),
-            enabled = currentSpeed < 3.0f
+            enabled = currentSpeed < 10.0f
           ) {
             Icon(
               imageVector = Icons.Default.Add,
               contentDescription = "Increase Speed",
-              tint = if (currentSpeed < 3.0f) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+              tint = if (currentSpeed < 10.0f) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
               modifier = Modifier.size(18.dp)
             )
           }

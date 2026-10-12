@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,7 @@ fun ContinueReadingCard(
   Card(
     modifier = modifier
       .fillMaxWidth()
+      .graphicsLayer()
       .testTag("continue_reading_card")
       .clip(RoundedCornerShape(20.dp))
       .clickable { onContinueClick() },

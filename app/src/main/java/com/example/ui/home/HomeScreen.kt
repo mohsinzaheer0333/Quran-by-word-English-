@@ -44,7 +44,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.model.ThemeMode
 import com.example.ui.home.components.ContinueReadingCard
 import com.example.ui.home.components.JuzCard
-import com.example.ui.home.components.LanguageDropdown
 import com.example.ui.theme.AmiriFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,14 +56,12 @@ fun HomeScreen(
   modifier: Modifier = Modifier
 ) {
   val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
-  val selectedLanguage by viewModel.selectedLanguage.collectAsStateWithLifecycle()
   val lastRead by viewModel.lastRead.collectAsStateWithLifecycle()
 
   Scaffold(
     topBar = {
       TopAppBar(
         title = {
-          // Centered / Balanced Brand
           Row(verticalAlignment = Alignment.CenterVertically) {
             com.example.ui.brand.AppIconView(size = 32.dp)
             Spacer(modifier = Modifier.width(10.dp))
@@ -83,16 +80,6 @@ fun HomeScreen(
                 maxLines = 1
               )
             }
-          }
-        },
-        navigationIcon = {
-          // Left side: Language Selector as requested
-          Box(modifier = Modifier.padding(start = 12.dp)) {
-            LanguageDropdown(
-              selectedLanguageCode = selectedLanguage,
-              availableLanguages = viewModel.availableLanguages,
-              onLanguageSelected = { langCode -> viewModel.setLanguage(langCode) }
-            )
           }
         },
         actions = {
@@ -197,7 +184,8 @@ fun HomeScreen(
       // 30 Juz Cards
       items(
         items = viewModel.juzList,
-        key = { it.number }
+        key = { it.number },
+        contentType = { "juz_card" }
       ) { juz ->
         JuzCard(
           juz = juz,

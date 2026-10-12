@@ -76,6 +76,7 @@ fun AppNavGraph(
 
       QuranReaderScreen(
         viewModel = readerViewModel,
+        preferencesRepository = preferencesRepository,
         juzNumber = juzNumber,
         initialAyahIndex = ayahIndex,
         onNavigateBack = {

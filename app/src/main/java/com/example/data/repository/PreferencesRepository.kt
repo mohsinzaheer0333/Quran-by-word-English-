@@ -28,7 +28,7 @@ class PreferencesRepository(context: Context) {
   private val _translationFontSize = MutableStateFlow(prefs.getFloat(KEY_TRANS_FONT_SIZE, 16f))
   val translationFontSize: StateFlow<Float> = _translationFontSize.asStateFlow()
 
-  private val _autoScrollSpeed = MutableStateFlow(prefs.getFloat(KEY_AUTO_SCROLL_SPEED, 1.0f))
+  private val _autoScrollSpeed = MutableStateFlow(prefs.getFloat(KEY_AUTO_SCROLL_SPEED, 5.0f).coerceIn(1.0f, 10.0f))
   val autoScrollSpeed: StateFlow<Float> = _autoScrollSpeed.asStateFlow()
 
   private val _lastReadPosition = MutableStateFlow(getStoredLastRead())
@@ -90,12 +90,18 @@ class PreferencesRepository(context: Context) {
   }
 
   fun setAutoScrollSpeed(speed: Float) {
-    val clamped = speed.coerceIn(0.5f, 3.0f)
+    val clamped = speed.coerceIn(1.0f, 10.0f)
     prefs.edit().putFloat(KEY_AUTO_SCROLL_SPEED, clamped).apply()
     _autoScrollSpeed.value = clamped
   }
 
   fun saveLastRead(position: LastReadPosition) {
+    val current = _lastReadPosition.value
+    if (current.juzNumber == position.juzNumber &&
+        current.surahNumber == position.surahNumber &&
+        current.ayahNumber == position.ayahNumber) {
+      return
+    }
     prefs.edit()
       .putInt(KEY_LAST_JUZ, position.juzNumber)
       .putInt(KEY_LAST_SURAH, position.surahNumber)
