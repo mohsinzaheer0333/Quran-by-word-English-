@@ -35,9 +35,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ViewStream
 import androidx.compose.material3.CircularProgressIndicator
@@ -175,14 +176,21 @@ fun QuranReaderScreen(
 
           // Auto Scroll Toggle (only active in Continuous mode)
           if (viewStateManager.currentMode == ReadingMode.CONTINUOUS) {
+            val isScrolling = uiState.isAutoScrollActive && uiState.isAutoScrollPlaying
             IconButton(
-              onClick = { viewModel.toggleAutoScroll() },
+              onClick = {
+                if (uiState.isAutoScrollActive && !uiState.isAutoScrollPlaying) {
+                  viewModel.resumeAutoScroll()
+                } else {
+                  viewModel.toggleAutoScroll()
+                }
+              },
               modifier = Modifier.testTag("auto_scroll_button")
             ) {
               Icon(
-                imageVector = Icons.Default.AutoAwesome,
-                contentDescription = "Auto Scroll",
-                tint = if (uiState.isAutoScrollActive) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant
+                imageVector = if (isScrolling) Icons.Default.Pause else Icons.Default.PlayArrow,
+                contentDescription = if (isScrolling) "Pause Auto Scroll" else "Start Auto Scroll",
+                tint = if (isScrolling) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant
               )
             }
           }
