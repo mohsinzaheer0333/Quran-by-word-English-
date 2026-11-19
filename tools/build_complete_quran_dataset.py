@@ -38,11 +38,11 @@ def process_juz(juz_num, chapters_map, output_dir):
     trans_data = fetch_json(trans_url)
     translations = [clean_translation(t["text"]) for t in trans_data["translations"]]
 
-    # 2. Fetch verses with words and uthmani text (handle pagination)
+    # 2. Fetch verses with words in both Uthmani and Indo-Pak scripts (handle pagination)
     all_verses = []
     page = 1
     while True:
-        verses_url = f"https://api.quran.com/api/v4/verses/by_juz/{juz_num}?page={page}&per_page=300&words=true&word_fields=text_uthmani&fields=text_uthmani,chapter_id"
+        verses_url = f"https://api.quran.com/api/v4/verses/by_juz/{juz_num}?page={page}&per_page=300&words=true&word_fields=text_uthmani,text_indopak&fields=text_uthmani,text_indopak,chapter_id"
         data = fetch_json(verses_url)
         all_verses.extend(data["verses"])
         pagination = data.get("pagination", {})
@@ -66,6 +66,7 @@ def process_juz(juz_num, chapters_map, output_dir):
             if w.get("char_type_name") == "end":
                 continue
             ar_word = w.get("text_uthmani") or w.get("text") or ""
+            ar_word_indopak = w.get("text_indopak") or ar_word
             trans_obj = w.get("translation") or {}
             en_word = trans_obj.get("text") or ""
             translit_obj = w.get("transliteration") or {}
@@ -75,18 +76,22 @@ def process_juz(juz_num, chapters_map, output_dir):
                 "id": w.get("id", w_pos),
                 "position": w_pos,
                 "arabic": ar_word,
+                "arabicIndopak": ar_word_indopak,
                 "english": en_word,
                 "transliteration": translit_text
             })
             w_pos += 1
 
+        uthmani_text = v.get("text_uthmani", "")
+        indopak_text = v.get("text_indopak") or uthmani_text
         ayah_item = {
             "surahNumber": ch_id,
             "ayahNumber": v.get("verse_number"),
             "surahNameArabic": ch_info["name_arabic"],
             "surahNameEnglish": ch_info["name_simple"],
             "juzNumber": juz_num,
-            "arabicText": v.get("text_uthmani", ""),
+            "arabicText": uthmani_text,
+            "arabicTextIndopak": indopak_text,
             "englishTranslation": translations[idx],
             "words": words_list
         }

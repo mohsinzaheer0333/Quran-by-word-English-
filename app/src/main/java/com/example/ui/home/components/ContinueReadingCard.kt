@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import com.example.model.LastReadPosition
 import com.example.model.ReadingMode
 import com.example.ui.theme.AmiriFontFamily
+import com.example.ui.theme.LocalNoorColors
 
 @Composable
 fun ContinueReadingCard(
@@ -43,6 +44,8 @@ fun ContinueReadingCard(
   onContinueClick: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val noorColors = LocalNoorColors.current
+
   Card(
     modifier = modifier
       .fillMaxWidth()
@@ -51,24 +54,32 @@ fun ContinueReadingCard(
       .clip(RoundedCornerShape(20.dp))
       .clickable { onContinueClick() },
     colors = CardDefaults.cardColors(
-      containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+      containerColor = if (noorColors.isDark) {
+        noorColors.outerContainerStart
+      } else {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+      }
     ),
-    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    elevation = CardDefaults.cardElevation(defaultElevation = if (noorColors.isDark) 0.dp else 2.dp)
   ) {
     Box(
       modifier = Modifier
         .fillMaxWidth()
         .background(
-          Brush.horizontalGradient(
-            colors = listOf(
-              MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-              MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f)
+          if (noorColors.isDark) {
+            noorColors.outerContainerBrush
+          } else {
+            Brush.horizontalGradient(
+              colors = listOf(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f)
+              )
             )
-          )
+          }
         )
         .border(
           width = 1.dp,
-          color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f),
+          color = if (noorColors.isDark) noorColors.cardBorder else MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f),
           shape = RoundedCornerShape(20.dp)
         )
         .padding(18.dp)
@@ -112,7 +123,7 @@ fun ContinueReadingCard(
               text = lastRead.surahNameArabic,
               fontFamily = AmiriFontFamily,
               fontSize = 20.sp,
-              color = MaterialTheme.colorScheme.primary
+              color = noorColors.surahArabicSubtitleText
             )
           }
 
@@ -122,41 +133,62 @@ fun ContinueReadingCard(
             Text(
               text = "Juz ${lastRead.juzNumber}",
               style = MaterialTheme.typography.bodySmall,
-              color = MaterialTheme.colorScheme.onSurfaceVariant
+              color = noorColors.mutedText
             )
             Text(
               text = " • ",
               style = MaterialTheme.typography.bodySmall,
-              color = MaterialTheme.colorScheme.onSurfaceVariant
+              color = noorColors.mutedText
             )
             Box(
               modifier = Modifier
                 .clip(RoundedCornerShape(6.dp))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f))
+                .background(
+                  if (noorColors.isDark) noorColors.badgeBackground else MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+                )
+                .then(
+                  if (noorColors.isDark) {
+                    Modifier.border(1.dp, noorColors.badgeBorder, RoundedCornerShape(6.dp))
+                  } else {
+                    Modifier
+                  }
+                )
                 .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
               Text(
                 text = if (lastRead.readingMode == ReadingMode.CONTINUOUS) "Continuous Scroll" else "Swipe Mode",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
+                color = if (noorColors.isDark) noorColors.badgeText else MaterialTheme.colorScheme.primary,
                 fontSize = 10.sp
               )
             }
           }
         }
 
-        Box(
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Row(
           modifier = Modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.primary),
-          contentAlignment = Alignment.Center
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (noorColors.isDark) noorColors.primaryGold else MaterialTheme.colorScheme.primary)
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .testTag("continue_reading_resume_button"),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+          Text(
+            text = "Resume",
+            style = MaterialTheme.typography.labelLarge.copy(
+              fontWeight = FontWeight.Bold,
+              fontSize = 13.sp
+            ),
+            color = MaterialTheme.colorScheme.onPrimary
+          )
           Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = "Resume Reading",
             tint = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(16.dp)
           )
         }
       }

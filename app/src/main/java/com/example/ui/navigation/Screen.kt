@@ -4,11 +4,17 @@ sealed class Screen(val route: String) {
   object Splash : Screen("splash")
   object Home : Screen("home")
   object Bookmarks : Screen("bookmarks")
+  object Notes : Screen("notes")
   object Settings : Screen("settings")
   object About : Screen("about")
 
   object Reader : Screen("reader/{juzNumber}/{ayahIndex}") {
     fun createRoute(juzNumber: Int, ayahIndex: Int = 0): String =
       "reader/$juzNumber/$ayahIndex"
+  }
+
+  object SurahReader : Screen("surah_reader/{surahNumber}/{ayahIndex}") {
+    fun createRoute(surahNumber: Int, ayahIndex: Int = 0): String =
+      "surah_reader/$surahNumber/$ayahIndex"
   }
 }

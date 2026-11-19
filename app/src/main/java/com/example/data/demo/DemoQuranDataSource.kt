@@ -15,12 +15,13 @@ object DemoQuranDataSource {
     surahNameEnglish = "Al-Fatihah",
     juzNumber = 1,
     arabicText = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
+    arabicTextIndopak = "بِسۡمِ اللهِ الرَّحۡمٰنِ الرَّحِيۡمِ",
     englishTranslation = "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
     words = listOf(
-      WordTranslation(1, 1, "بِسْمِ", "In (the) name", "bis'mi"),
-      WordTranslation(2, 2, "ٱللَّهِ", "(of) Allah", "l-lahi"),
-      WordTranslation(3, 3, "ٱلرَّحْمَـٰنِ", "the Entirely Merciful", "l-raḥmāni"),
-      WordTranslation(4, 4, "ٱلرَّحِيمِ", "the Especially Merciful", "l-raḥīmi")
+      WordTranslation(1, 1, "بِسْمِ", "In (the) name", "bis'mi", "بِسۡمِ"),
+      WordTranslation(2, 2, "ٱللَّهِ", "(of) Allah", "l-lahi", "اللهِ"),
+      WordTranslation(3, 3, "ٱلرَّحْمَـٰنِ", "the Entirely Merciful", "l-raḥmāni", "الرَّحۡمٰنِ"),
+      WordTranslation(4, 4, "ٱلرَّحِيمِ", "the Especially Merciful", "l-raḥīmi", "الرَّحِيۡمِ")
     )
   )
 }

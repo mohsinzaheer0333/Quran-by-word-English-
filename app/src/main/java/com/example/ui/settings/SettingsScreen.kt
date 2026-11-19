@@ -51,10 +51,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.graphics.Color
 import com.example.data.repository.PreferencesRepository
+import com.example.model.MushafScript
 import com.example.model.ReadingMode
 import com.example.model.ThemeMode
-import com.example.ui.theme.AmiriFontFamily
+import com.example.ui.theme.LocalNoorColors
+import com.example.ui.theme.lineHeightMultiplier
+import com.example.ui.theme.quranFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,33 +77,51 @@ fun SettingsScreen(
   val arabicFontSize by preferencesRepository.arabicFontSize.collectAsStateWithLifecycle()
   val translationFontSize by preferencesRepository.translationFontSize.collectAsStateWithLifecycle()
   val autoScrollSpeed by preferencesRepository.autoScrollSpeed.collectAsStateWithLifecycle()
+  val mushafScript by preferencesRepository.mushafScript.collectAsStateWithLifecycle()
+
+  val noorColors = LocalNoorColors.current
 
   Scaffold(
+    containerColor = MaterialTheme.colorScheme.background,
     topBar = {
-      TopAppBar(
-        title = {
-          Text(
-            text = "Settings",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface
-          )
-        },
-        navigationIcon = {
-          IconButton(
-            onClick = onNavigateBack,
-            modifier = Modifier.testTag("settings_back_button")
-          ) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back",
-              tint = MaterialTheme.colorScheme.onSurface
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .background(noorColors.topBarBrush)
+      ) {
+        TopAppBar(
+          title = {
+            Text(
+              text = "Settings",
+              style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+              color = MaterialTheme.colorScheme.onSurface
             )
-          }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-          containerColor = MaterialTheme.colorScheme.surface
+          },
+          navigationIcon = {
+            IconButton(
+              onClick = onNavigateBack,
+              modifier = Modifier.testTag("settings_back_button")
+            ) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = MaterialTheme.colorScheme.onSurface
+              )
+            }
+          },
+          colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent
+          )
         )
-      )
+        if (noorColors.isDark) {
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(1.dp)
+              .background(noorColors.cardBorder)
+          )
+        }
+      }
     },
     modifier = modifier
   ) { innerPadding ->
@@ -200,15 +222,27 @@ fun SettingsScreen(
               modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .background(if (noorColors.isDark) noorColors.innerCardBackground else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .then(
+                  if (noorColors.isDark) {
+                    Modifier.border(1.dp, noorColors.cardBorder, RoundedCornerShape(8.dp))
+                  } else {
+                    Modifier
+                  }
+                )
                 .padding(8.dp),
               contentAlignment = Alignment.Center
             ) {
               Text(
-                text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-                fontFamily = AmiriFontFamily,
+                text = if (mushafScript == MushafScript.INDOPAK) {
+                  "بِسۡمِ اللهِ الرَّحۡمٰنِ الرَّحِيۡمِ"
+                } else {
+                  "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"
+                },
+                fontFamily = mushafScript.quranFontFamily(),
                 fontSize = arabicFontSize.sp,
-                color = MaterialTheme.colorScheme.primary,
+                lineHeight = (arabicFontSize * mushafScript.lineHeightMultiplier()).sp,
+                color = if (noorColors.isDark) noorColors.fullAyahArabicText else MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
               )
             }
@@ -242,7 +276,14 @@ fun SettingsScreen(
               modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .background(if (noorColors.isDark) noorColors.innerCardBackground else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .then(
+                  if (noorColors.isDark) {
+                    Modifier.border(1.dp, noorColors.cardBorder, RoundedCornerShape(8.dp))
+                  } else {
+                    Modifier
+                  }
+                )
                 .padding(8.dp),
               contentAlignment = Alignment.Center
             ) {
@@ -335,18 +376,25 @@ private fun SettingsGroup(
   modifier: Modifier = Modifier,
   content: @Composable () -> Unit
 ) {
+  val noorColors = LocalNoorColors.current
+
   Card(
     modifier = modifier.fillMaxWidth(),
-    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    colors = CardDefaults.cardColors(
+      containerColor = if (noorColors.isDark) noorColors.outerContainerStart else MaterialTheme.colorScheme.surface
+    ),
     shape = RoundedCornerShape(18.dp),
-    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    elevation = CardDefaults.cardElevation(defaultElevation = if (noorColors.isDark) 0.dp else 1.dp)
   ) {
     Box(
       modifier = Modifier
         .fillMaxWidth()
+        .then(
+          if (noorColors.isDark) Modifier.background(noorColors.outerContainerBrush) else Modifier
+        )
         .border(
           width = 1.dp,
-          color = MaterialTheme.colorScheme.outlineVariant,
+          color = noorColors.cardBorder,
           shape = RoundedCornerShape(18.dp)
         )
         .padding(16.dp)

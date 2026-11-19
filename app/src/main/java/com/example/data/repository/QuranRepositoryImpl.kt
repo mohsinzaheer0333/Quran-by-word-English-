@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap
 class QuranRepositoryImpl(private val context: Context) : QuranRepository {
 
   private val juzCache = ConcurrentHashMap<Int, List<Ayah>>()
+  private val surahCache = ConcurrentHashMap<Int, List<Ayah>>()
   private var cachedSurahs: List<SurahInfo>? = null
 
   private val preloadScope = kotlinx.coroutines.CoroutineScope(Dispatchers.IO + kotlinx.coroutines.SupervisorJob())
@@ -83,6 +84,34 @@ class QuranRepositoryImpl(private val context: Context) : QuranRepository {
     return juzAyahs.find { it.surahNumber == surahNumber && it.ayahNumber == ayahNumber }
   }
 
+  override suspend fun getAyahsForSurah(surahNumber: Int): List<Ayah> {
+    val clamped = surahNumber.coerceIn(1, 114)
+    surahCache[clamped]?.let { return it }
+
+    return withContext(Dispatchers.IO) {
+      val matchingJuzNumbers = all30JuzList
+        .filter { clamped in it.startSurahNumber..it.endSurahNumber }
+        .map { it.number }
+
+      val ayahs = ArrayList<Ayah>()
+      for (juzNum in matchingJuzNumbers) {
+        val juzAyahs = juzCache[juzNum] ?: loadJuzFromAssets(juzNum).also { juzCache[juzNum] = it }
+        juzAyahs.forEach { ayah ->
+          if (ayah.surahNumber == clamped) {
+            ayahs.add(ayah)
+          }
+        }
+      }
+      ayahs.sortBy { it.ayahNumber }
+      surahCache[clamped] = ayahs
+      ayahs
+    }
+  }
+
+  override suspend fun getSurahByNumber(surahNumber: Int): SurahInfo? {
+    return getAllSurahs().find { it.number == surahNumber }
+  }
+
   override suspend fun getAllSurahs(): List<SurahInfo> {
     cachedSurahs?.let { return it }
     return withContext(Dispatchers.IO) {
@@ -90,6 +119,61 @@ class QuranRepositoryImpl(private val context: Context) : QuranRepository {
       cachedSurahs = surahs
       surahs
     }
+  }
+
+  override suspend fun searchQuran(query: String, limit: Int): List<Ayah> {
+    val trimmed = query.trim()
+    if (trimmed.length < 2) return emptyList()
+
+    val isArabicQuery = trimmed.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
+    val normalizedArabicQuery = if (isArabicQuery) normalizeArabicForSearch(trimmed) else ""
+    val lowerQuery = trimmed.lowercase()
+
+    return withContext(Dispatchers.IO) {
+      val matches = ArrayList<Ayah>(limit.coerceAtMost(100))
+      for (juzNum in 1..30) {
+        val juzAyahs = juzCache[juzNum] ?: loadJuzFromAssets(juzNum).also { juzCache[juzNum] = it }
+        for (ayah in juzAyahs) {
+          val matched = if (isArabicQuery) {
+            normalizeArabicForSearch(ayah.arabicText).contains(normalizedArabicQuery) ||
+              normalizeArabicForSearch(ayah.arabicTextIndopak).contains(normalizedArabicQuery) ||
+              normalizeArabicForSearch(ayah.surahNameArabic).contains(normalizedArabicQuery)
+          } else {
+            ayah.englishTranslation.lowercase().contains(lowerQuery) ||
+              ayah.surahNameEnglish.lowercase().contains(lowerQuery) ||
+              ayah.verseKey == trimmed ||
+              ayah.words.any { it.english.lowercase().contains(lowerQuery) }
+          }
+          if (matched) {
+            matches.add(ayah)
+            if (matches.size >= limit) return@withContext matches
+          }
+        }
+      }
+      matches
+    }
+  }
+
+  private fun normalizeArabicForSearch(text: String): String {
+    val sb = StringBuilder(text.length)
+    for (ch in text) {
+      when {
+        // Skip Arabic harakat, Quranic annotation marks, tatweel
+        ch in '\u0610'..'\u061A' ||
+          ch in '\u064B'..'\u065F' ||
+          ch == '\u0670' ||
+          ch in '\u06D6'..'\u06ED' ||
+          ch == '\u0640' -> continue
+        // Normalize Alef variants (including Alef Wasla ٱ) to bare Alef ا
+        ch == '\u0622' || ch == '\u0623' || ch == '\u0625' || ch == '\u0671' -> sb.append('\u0627')
+        // Normalize Alef Maksura ى to Ya ي
+        ch == '\u0649' -> sb.append('\u064A')
+        // Normalize Teh Marbuta ة to Heh ه
+        ch == '\u0629' -> sb.append('\u0647')
+        else -> sb.append(ch)
+      }
+    }
+    return sb.toString()
   }
 
   override fun getSupportedLanguages(): List<TranslationLanguage> {
@@ -114,17 +198,22 @@ class QuranRepositoryImpl(private val context: Context) : QuranRepository {
 
       for (w in 0 until wordsArray.length()) {
         val wordObj = wordsArray.getJSONObject(w)
+        val uthmaniWord = wordObj.optString("arabic", "")
+        val indopakWord = wordObj.optString("arabicIndopak", uthmaniWord).ifBlank { uthmaniWord }
         words.add(
           WordTranslation(
             id = wordObj.optInt("id", w + 1),
             position = wordObj.optInt("position", w + 1),
-            arabic = wordObj.optString("arabic", ""),
+            arabic = uthmaniWord,
             english = wordObj.optString("english", ""),
-            transliteration = wordObj.optString("transliteration", null)
+            transliteration = wordObj.optString("transliteration", null),
+            arabicIndopak = indopakWord
           )
         )
       }
 
+      val uthmaniAyah = obj.getString("arabicText")
+      val indopakAyah = obj.optString("arabicTextIndopak", uthmaniAyah).ifBlank { uthmaniAyah }
       result.add(
         Ayah(
           surahNumber = obj.getInt("surahNumber"),
@@ -132,9 +221,10 @@ class QuranRepositoryImpl(private val context: Context) : QuranRepository {
           surahNameArabic = obj.getString("surahNameArabic"),
           surahNameEnglish = obj.getString("surahNameEnglish"),
           juzNumber = obj.getInt("juzNumber"),
-          arabicText = obj.getString("arabicText"),
+          arabicText = uthmaniAyah,
           englishTranslation = obj.getString("englishTranslation"),
-          words = words
+          words = words,
+          arabicTextIndopak = indopakAyah
         )
       )
     }

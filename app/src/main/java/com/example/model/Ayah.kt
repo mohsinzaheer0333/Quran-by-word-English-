@@ -17,7 +17,13 @@ data class Ayah(
   val arabicText: String,
   val englishTranslation: String,
   val words: List<WordTranslation>,
-  val isBookmarked: Boolean = false
+  val isBookmarked: Boolean = false,
+  val arabicTextIndopak: String = arabicText
 ) {
   val verseKey: String get() = "$surahNumber:$ayahNumber"
+
+  fun arabicTextFor(script: MushafScript): String = when (script) {
+    MushafScript.UTHMANI -> arabicText
+    MushafScript.INDOPAK -> arabicTextIndopak.ifBlank { arabicText }
+  }
 }

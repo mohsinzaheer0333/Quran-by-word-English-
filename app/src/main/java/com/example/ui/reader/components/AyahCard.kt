@@ -30,13 +30,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Ayah
-import com.example.ui.theme.AmiriFontFamily
+import com.example.model.MushafScript
+import com.example.ui.theme.LocalNoorColors
+import com.example.ui.theme.lineHeightMultiplier
+import com.example.ui.theme.quranFontFamily
 
 private val AyahCardShape = RoundedCornerShape(22.dp)
 private val BadgeShape = RoundedCornerShape(10.dp)
@@ -53,8 +59,11 @@ fun AyahCard(
   onToggleBookmark: () -> Unit,
   arabicFontSize: Float = 30f,
   translationFontSize: Float = 16f,
+  mushafScript: MushafScript = MushafScript.UTHMANI,
   modifier: Modifier = Modifier
 ) {
+  val noorColors = LocalNoorColors.current
+
   Card(
     modifier = modifier
       .fillMaxWidth()
@@ -62,18 +71,21 @@ fun AyahCard(
       .testTag("ayah_card_${ayah.surahNumber}_${ayah.ayahNumber}")
       .border(
         width = 1.dp,
-        color = MaterialTheme.colorScheme.outlineVariant,
+        color = noorColors.cardBorder,
         shape = AyahCardShape
       ),
     shape = AyahCardShape,
     colors = CardDefaults.cardColors(
-      containerColor = MaterialTheme.colorScheme.surface
+      containerColor = if (noorColors.isDark) noorColors.outerContainerStart else MaterialTheme.colorScheme.surface
     ),
-    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    elevation = CardDefaults.cardElevation(defaultElevation = if (noorColors.isDark) 0.dp else 1.dp)
   ) {
     Column(
       modifier = Modifier
         .fillMaxWidth()
+        .then(
+          if (noorColors.isDark) Modifier.background(noorColors.outerContainerBrush) else Modifier
+        )
         .padding(16.dp)
     ) {
       // Ayah Header: Ayah badge, Surah title, and Bookmark action
@@ -86,10 +98,10 @@ fun AyahCard(
           Box(
             modifier = Modifier
               .clip(BadgeShape)
-              .background(MaterialTheme.colorScheme.primaryContainer)
+              .background(noorColors.badgeBackground)
               .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f),
+                color = noorColors.badgeBorder,
                 shape = BadgeShape
               )
               .padding(horizontal = 10.dp, vertical = 4.dp)
@@ -97,16 +109,26 @@ fun AyahCard(
             Text(
               text = "AYAH ${ayah.ayahNumber}",
               style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-              color = MaterialTheme.colorScheme.onPrimaryContainer
+              color = noorColors.badgeText
             )
           }
 
           Spacer(modifier = Modifier.width(10.dp))
 
           Text(
-            text = "${ayah.surahNameEnglish} (${ayah.surahNameArabic})",
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = buildAnnotatedString {
+              withStyle(SpanStyle(color = noorColors.surahTitleText)) {
+                append(ayah.surahNameEnglish)
+              }
+              withStyle(
+                SpanStyle(
+                  color = if (noorColors.isDark) noorColors.surahArabicSubtitleText else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+              ) {
+                append(" (${ayah.surahNameArabic})")
+              }
+            },
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
           )
         }
 
@@ -126,22 +148,29 @@ fun AyahCard(
 
       Spacer(modifier = Modifier.height(14.dp))
 
-      // Complete Arabic Ayah Text rendered in Amiri font with Harakat
+      // Complete Arabic Ayah Text rendered in the active global Mushaf script & font
       CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Box(
           modifier = Modifier
             .fillMaxWidth()
             .clip(ArabicTextBoxShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f))
+            .background(noorColors.fullAyahBoxBackground)
+            .then(
+              if (noorColors.isDark) {
+                Modifier.border(1.dp, noorColors.cardBorder, ArabicTextBoxShape)
+              } else {
+                Modifier
+              }
+            )
             .padding(horizontal = 14.dp, vertical = 12.dp)
         ) {
           Text(
-            text = ayah.arabicText,
-            fontFamily = AmiriFontFamily,
+            text = ayah.arabicTextFor(mushafScript),
+            fontFamily = mushafScript.quranFontFamily(),
             fontSize = arabicFontSize.sp,
-            fontWeight = FontWeight.Bold,
-            lineHeight = (arabicFontSize * 1.75f).sp,
-            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Normal,
+            lineHeight = (arabicFontSize * mushafScript.lineHeightMultiplier()).sp,
+            color = noorColors.fullAyahArabicText,
             textAlign = TextAlign.Right,
             modifier = Modifier.fillMaxWidth()
           )
@@ -155,7 +184,8 @@ fun AyahCard(
         WordByWordSection(
           words = ayah.words,
           arabicFontSize = (arabicFontSize * 0.75f).coerceAtLeast(18f),
-          translationFontSize = (translationFontSize * 0.82f).coerceAtLeast(12f)
+          translationFontSize = (translationFontSize * 0.82f).coerceAtLeast(12f),
+          mushafScript = mushafScript
         )
         Spacer(modifier = Modifier.height(16.dp))
       }

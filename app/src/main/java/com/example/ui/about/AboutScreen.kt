@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.ui.brand.AppIconView
 import com.example.ui.theme.AmiriFontFamily
+import com.example.ui.theme.LocalNoorColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,33 +74,49 @@ fun AboutScreen(
   }
 
   var selectedQualityBgTab by remember { mutableIntStateOf(0) }
+  val noorColors = LocalNoorColors.current
 
   Scaffold(
+    containerColor = MaterialTheme.colorScheme.background,
     topBar = {
-      TopAppBar(
-        title = {
-          Text(
-            text = "Quran by Word English",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface
-          )
-        },
-        navigationIcon = {
-          IconButton(
-            onClick = onNavigateBack,
-            modifier = Modifier.testTag("about_back_button")
-          ) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back",
-              tint = MaterialTheme.colorScheme.onSurface
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .background(noorColors.topBarBrush)
+      ) {
+        TopAppBar(
+          title = {
+            Text(
+              text = "Quran by Word English",
+              style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+              color = MaterialTheme.colorScheme.onSurface
             )
-          }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-          containerColor = MaterialTheme.colorScheme.surface
+          },
+          navigationIcon = {
+            IconButton(
+              onClick = onNavigateBack,
+              modifier = Modifier.testTag("about_back_button")
+            ) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = if (noorColors.isDark) noorColors.primaryGold else MaterialTheme.colorScheme.onSurface
+              )
+            }
+          },
+          colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent
+          )
         )
-      )
+        if (noorColors.isDark) {
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(1.dp)
+              .background(noorColors.cardBorder)
+          )
+        }
+      }
     },
     modifier = modifier
   ) { innerPadding ->
@@ -116,15 +133,20 @@ fun AboutScreen(
       Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(
+          containerColor = if (noorColors.isDark) Color.Transparent else MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (noorColors.isDark) 0.dp else 2.dp)
       ) {
         Box(
           modifier = Modifier
             .fillMaxWidth()
+            .then(
+              if (noorColors.isDark) Modifier.background(noorColors.outerContainerBrush) else Modifier
+            )
             .border(
               width = 1.dp,
-              color = MaterialTheme.colorScheme.outlineVariant,
+              color = noorColors.cardBorder,
               shape = RoundedCornerShape(22.dp)
             )
             .padding(24.dp),
@@ -169,13 +191,20 @@ fun AboutScreen(
             Box(
               modifier = Modifier
                 .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .background(if (noorColors.isDark) noorColors.badgeBackground else MaterialTheme.colorScheme.primaryContainer)
+                .then(
+                  if (noorColors.isDark) {
+                    Modifier.border(1.dp, noorColors.badgeBorder, RoundedCornerShape(10.dp))
+                  } else {
+                    Modifier
+                  }
+                )
                 .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
               Text(
                 text = "Complete 114 Surahs & 30 Juz Offline",
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = if (noorColors.isDark) noorColors.badgeText else MaterialTheme.colorScheme.onPrimaryContainer
               )
             }
           }
@@ -186,15 +215,20 @@ fun AboutScreen(
       Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+        colors = CardDefaults.cardColors(
+          containerColor = if (noorColors.isDark) Color.Transparent else MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (noorColors.isDark) 0.dp else 1.5.dp)
       ) {
         Column(
           modifier = Modifier
             .fillMaxWidth()
+            .then(
+              if (noorColors.isDark) Modifier.background(noorColors.outerContainerBrush) else Modifier
+            )
             .border(
               width = 1.dp,
-              color = MaterialTheme.colorScheme.outlineVariant,
+              color = noorColors.cardBorder,
               shape = RoundedCornerShape(18.dp)
             )
             .padding(18.dp),
@@ -260,15 +294,20 @@ fun AboutScreen(
       Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+        colors = CardDefaults.cardColors(
+          containerColor = if (noorColors.isDark) Color.Transparent else MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (noorColors.isDark) 0.dp else 1.5.dp)
       ) {
         Column(
           modifier = Modifier
             .fillMaxWidth()
+            .then(
+              if (noorColors.isDark) Modifier.background(noorColors.outerContainerBrush) else Modifier
+            )
             .border(
               width = 1.dp,
-              color = MaterialTheme.colorScheme.outlineVariant,
+              color = noorColors.cardBorder,
               shape = RoundedCornerShape(18.dp)
             )
             .padding(18.dp),
@@ -400,15 +439,20 @@ fun AboutScreen(
       Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+        colors = CardDefaults.cardColors(
+          containerColor = if (noorColors.isDark) Color.Transparent else MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (noorColors.isDark) 0.dp else 1.5.dp)
       ) {
         Column(
           modifier = Modifier
             .fillMaxWidth()
+            .then(
+              if (noorColors.isDark) Modifier.background(noorColors.outerContainerBrush) else Modifier
+            )
             .border(
               width = 1.dp,
-              color = MaterialTheme.colorScheme.outlineVariant,
+              color = noorColors.cardBorder,
               shape = RoundedCornerShape(18.dp)
             )
             .padding(18.dp),
@@ -554,7 +598,7 @@ private fun ScreenshotCaptionItem(
       Text(
         text = number,
         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-        color = Color.White
+        color = MaterialTheme.colorScheme.onSecondary
       )
     }
 

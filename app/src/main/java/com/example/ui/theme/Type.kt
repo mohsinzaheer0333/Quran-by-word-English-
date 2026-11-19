@@ -7,12 +7,33 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.model.MushafScript
 
 // High quality verified Open Source Fonts installed via font-util
 val AmiriFontFamily = FontFamily(
   Font(R.font.amiri, FontWeight.Normal),
   Font(R.font.amiri, FontWeight.Bold)
 )
+
+val AmiriQuranFontFamily = FontFamily(
+  Font(R.font.amiri_quran, FontWeight.Normal),
+  Font(R.font.amiri_quran, FontWeight.Bold)
+)
+
+val NotoNaskhArabicFontFamily = FontFamily(
+  Font(R.font.noto_naskh_arabic, FontWeight.Normal),
+  Font(R.font.noto_naskh_arabic, FontWeight.Bold)
+)
+
+fun MushafScript.quranFontFamily(): FontFamily = when (this) {
+  MushafScript.UTHMANI -> AmiriQuranFontFamily
+  MushafScript.INDOPAK -> NotoNaskhArabicFontFamily
+}
+
+fun MushafScript.lineHeightMultiplier(): Float = when (this) {
+  MushafScript.UTHMANI -> 2.0f
+  MushafScript.INDOPAK -> 1.95f
+}
 
 val OutfitFontFamily = FontFamily(
   Font(R.font.outfit, FontWeight.Normal),

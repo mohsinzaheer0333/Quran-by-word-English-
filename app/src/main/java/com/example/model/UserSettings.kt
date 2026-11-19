@@ -11,6 +11,16 @@ enum class ReadingMode {
   SWIPE
 }
 
+enum class MushafScript(val label: String) {
+  UTHMANI("Madinah (Uthmani)"),
+  INDOPAK("Indo-Pak Script")
+}
+
+enum class MushafPaperMode(val label: String) {
+  CLASSIC_CREAM("Classic Cream"),
+  MIDNIGHT_NAVY("Midnight Navy")
+}
+
 data class TranslationLanguage(
   val code: String,
   val displayName: String,

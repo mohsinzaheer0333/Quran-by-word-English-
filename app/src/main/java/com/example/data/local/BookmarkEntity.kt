@@ -14,5 +14,7 @@ data class BookmarkEntity(
   val ayahNumber: Int,
   val arabicTextPreview: String,
   val translationPreview: String,
-  val timestamp: Long = System.currentTimeMillis()
+  val timestamp: Long = System.currentTimeMillis(),
+  val isMushafPage: Boolean = false,
+  val mushafPageNumber: Int = 0
 )

@@ -12,5 +12,11 @@ data class WordTranslation(
   val position: Int,
   val arabic: String,
   val english: String,
-  val transliteration: String? = null
-)
+  val transliteration: String? = null,
+  val arabicIndopak: String = arabic
+) {
+  fun arabicFor(script: MushafScript): String = when (script) {
+    MushafScript.UTHMANI -> arabic
+    MushafScript.INDOPAK -> arabicIndopak.ifBlank { arabic }
+  }
+}

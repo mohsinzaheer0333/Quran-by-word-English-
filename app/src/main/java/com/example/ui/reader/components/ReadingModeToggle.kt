@@ -60,6 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.ReadingMode
+import com.example.ui.theme.LocalNoorColors
 
 /**
  * Premium toggle control allowing users to switch between 'continuous scroll'
@@ -72,6 +73,7 @@ fun ReadingModeSegmentedToggle(
   modifier: Modifier = Modifier
 ) {
   val shape = RoundedCornerShape(16.dp)
+  val noorColors = LocalNoorColors.current
 
   Surface(
     modifier = modifier
@@ -79,15 +81,15 @@ fun ReadingModeSegmentedToggle(
       .height(52.dp)
       .testTag("reading_mode_segmented_toggle"),
     shape = shape,
-    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-    tonalElevation = 2.dp
+    color = if (noorColors.isDark) noorColors.innerCardBackground else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+    tonalElevation = if (noorColors.isDark) 0.dp else 2.dp
   ) {
     BoxWithConstraints(
       modifier = Modifier
         .fillMaxWidth()
         .border(
           width = 1.dp,
-          color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+          color = if (noorColors.isDark) noorColors.cardBorder else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
           shape = shape
         )
         .padding(4.dp)
@@ -111,10 +113,10 @@ fun ReadingModeSegmentedToggle(
           .width(tabWidth)
           .fillMaxHeight()
           .clip(RoundedCornerShape(12.dp))
-          .background(MaterialTheme.colorScheme.surface)
+          .background(if (noorColors.isDark) noorColors.activeWordCardBackground else MaterialTheme.colorScheme.surface)
           .border(
             width = 1.dp,
-            color = Color(0xFFDFC07C).copy(alpha = 0.8f),
+            color = if (noorColors.isDark) noorColors.primaryGold else Color(0xFFDFC07C).copy(alpha = 0.8f),
             shape = RoundedCornerShape(12.dp)
           )
       )
@@ -155,8 +157,10 @@ private fun ToggleSegment(
   testTag: String,
   modifier: Modifier = Modifier
 ) {
+  val noorColors = LocalNoorColors.current
+
   val iconTint by animateColorAsState(
-    targetValue = if (isSelected) Color(0xFFDFC07C) else MaterialTheme.colorScheme.onSurfaceVariant,
+    targetValue = if (isSelected) noorColors.primaryGold else MaterialTheme.colorScheme.onSurfaceVariant,
     label = "icon_tint"
   )
 
@@ -205,7 +209,11 @@ private fun ToggleSegment(
       Text(
         text = subtitle,
         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-        color = if (isSelected) Color(0xFFDFC07C) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+        color = if (isSelected) {
+          if (noorColors.isDark) noorColors.lightGold else Color(0xFFDFC07C)
+        } else {
+          if (noorColors.isDark) noorColors.mutedText else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        },
         maxLines = 1
       )
     }
@@ -223,19 +231,32 @@ fun ReadingModeToggleBar(
   onToggleExpand: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val noorColors = LocalNoorColors.current
+  val barShape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+
   Card(
     modifier = modifier
       .fillMaxWidth()
-      .testTag("reading_mode_toggle_bar"),
-    shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp),
+      .testTag("reading_mode_toggle_bar")
+      .then(
+        if (noorColors.isDark) {
+          Modifier.border(1.dp, noorColors.cardBorder, barShape)
+        } else {
+          Modifier
+        }
+      ),
+    shape = barShape,
     colors = CardDefaults.cardColors(
-      containerColor = MaterialTheme.colorScheme.surface
+      containerColor = if (noorColors.isDark) noorColors.outerContainerStart else MaterialTheme.colorScheme.surface
     ),
-    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    elevation = CardDefaults.cardElevation(defaultElevation = if (noorColors.isDark) 0.dp else 2.dp)
   ) {
     Column(
       modifier = Modifier
         .fillMaxWidth()
+        .then(
+          if (noorColors.isDark) Modifier.background(noorColors.outerContainerBrush) else Modifier
+        )
         .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
       // Always visible header row with compact switcher
@@ -249,7 +270,7 @@ fun ReadingModeToggleBar(
             modifier = Modifier
               .size(8.dp)
               .clip(CircleShape)
-              .background(Color(0xFFDFC07C))
+              .background(noorColors.primaryGold)
           )
           Spacer(modifier = Modifier.width(8.dp))
           Text(
@@ -258,7 +279,7 @@ fun ReadingModeToggleBar(
               fontWeight = FontWeight.Bold,
               letterSpacing = 0.5.sp
             ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (noorColors.isDark) noorColors.lightGold else MaterialTheme.colorScheme.onSurfaceVariant
           )
         }
 
@@ -271,7 +292,7 @@ fun ReadingModeToggleBar(
           Icon(
             imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
             contentDescription = if (isExpanded) "Collapse mode selector" else "Expand mode selector",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = if (noorColors.isDark) noorColors.primaryGold else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
           )
         }
@@ -301,7 +322,7 @@ fun ReadingModeToggleBar(
               ReadingMode.SWIPE -> "Authentic Arabic Quran (Mushaf) reading: Swipe from Left to Right to advance to next Ayah, or use navigation arrows."
             },
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            color = if (noorColors.isDark) noorColors.mutedText else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
             modifier = Modifier.padding(horizontal = 4.dp)
           )
         }

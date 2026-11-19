@@ -10,7 +10,9 @@ import com.example.data.repository.QuranRepository
 import com.example.model.Ayah
 import com.example.model.JuzInfo
 import com.example.model.LastReadPosition
+import com.example.model.MushafScript
 import com.example.model.ReadingMode
+import com.example.model.SurahInfo
 import com.example.model.TranslationLanguage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,6 +30,7 @@ import kotlinx.coroutines.withContext
 @Immutable
 data class ReaderUiState(
   val currentJuz: JuzInfo? = null,
+  val currentSurah: SurahInfo? = null,
   val ayahs: List<Ayah> = emptyList(),
   val bookmarkedVerseKeys: Set<String> = emptySet(),
   val readingMode: ReadingMode = ReadingMode.CONTINUOUS,
@@ -37,6 +40,7 @@ data class ReaderUiState(
   val arabicFontSize: Float = 28f,
   val translationFontSize: Float = 15f,
   val selectedLanguage: String = "en",
+  val mushafScript: MushafScript = MushafScript.UTHMANI,
   val currentAyahIndex: Int = 0,
   val isLoading: Boolean = true
 )
@@ -79,6 +83,14 @@ class ReaderViewModel(
     }
 
     viewModelScope.launch {
+      preferencesRepository.mushafScript.collect { script ->
+        _uiState.update { current ->
+          current.copy(mushafScript = script)
+        }
+      }
+    }
+
+    viewModelScope.launch {
       bookmarkRepository.allBookmarks.collect { bookmarks ->
         val bookmarkKeys = bookmarks.map { "${it.surahNumber}:${it.ayahNumber}" }.toSet()
         _uiState.update { current ->
@@ -105,6 +117,7 @@ class ReaderViewModel(
       _uiState.update {
         it.copy(
           currentJuz = juz,
+          currentSurah = null,
           ayahs = ayahs,
           selectedLanguage = currentLang,
           currentAyahIndex = targetIndex,
@@ -116,6 +129,39 @@ class ReaderViewModel(
         val currentAyah = ayahs[targetIndex]
         viewModelScope.launch(Dispatchers.IO) {
           updateLastRead(juzNumber, currentAyah)
+        }
+      }
+    }
+  }
+
+  fun loadSurah(surahNumber: Int, initialAyahIndex: Int = 0) {
+    viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true) }
+      val currentLang = preferencesRepository.selectedLanguage.value
+
+      val surah = withContext(Dispatchers.IO) {
+        quranRepository.getSurahByNumber(surahNumber)
+      }
+      val ayahs = withContext(Dispatchers.IO) {
+        quranRepository.getAyahsForSurah(surahNumber)
+      }
+      val targetIndex = initialAyahIndex.coerceIn(0, (ayahs.size - 1).coerceAtLeast(0))
+
+      _uiState.update {
+        it.copy(
+          currentJuz = null,
+          currentSurah = surah,
+          ayahs = ayahs,
+          selectedLanguage = currentLang,
+          currentAyahIndex = targetIndex,
+          isLoading = false
+        )
+      }
+
+      if (ayahs.isNotEmpty()) {
+        val currentAyah = ayahs[targetIndex]
+        viewModelScope.launch(Dispatchers.IO) {
+          updateLastRead(currentAyah.juzNumber, currentAyah)
         }
       }
     }
@@ -224,7 +270,7 @@ class ReaderViewModel(
         surahNameArabic = ayah.surahNameArabic,
         surahNameEnglish = ayah.surahNameEnglish,
         ayahNumber = ayah.ayahNumber,
-        arabicTextPreview = ayah.arabicText,
+        arabicTextPreview = ayah.arabicTextFor(_uiState.value.mushafScript),
         translationPreview = ayah.englishTranslation
       )
       bookmarkRepository.toggleBookmark(entity, isCurrentlyBookmarked)
@@ -241,7 +287,7 @@ class ReaderViewModel(
       lastReadJob = viewModelScope.launch(Dispatchers.IO) {
         delay(600L) // Wait until scroll motion settles
         val ayah = ayahs.getOrNull(index) ?: return@launch
-        updateLastRead(_uiState.value.currentJuz?.number ?: 1, ayah)
+        updateLastRead(ayah.juzNumber, ayah)
       }
     }
   }

@@ -81,12 +81,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.repository.PreferencesRepository
+import com.example.model.MushafScript
 import com.example.model.ReadingMode
 import com.example.ui.reader.components.AutoScrollControls
 import com.example.ui.reader.components.AyahCard
 import com.example.ui.reader.components.ReadingModeToggleBar
 import com.example.ui.reader.state.rememberReadingViewStateManager
 import com.example.ui.theme.AmiriFontFamily
+import com.example.ui.theme.LocalNoorColors
+import com.example.ui.theme.lineHeightMultiplier
+import com.example.ui.theme.quranFontFamily
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -98,8 +102,9 @@ import kotlinx.coroutines.launch
 fun QuranReaderScreen(
   viewModel: ReaderViewModel,
   preferencesRepository: PreferencesRepository,
-  juzNumber: Int,
-  initialAyahIndex: Int,
+  juzNumber: Int = 0,
+  surahNumber: Int = 0,
+  initialAyahIndex: Int = 0,
   onNavigateBack: () -> Unit,
   modifier: Modifier = Modifier
 ) {
@@ -110,8 +115,12 @@ fun QuranReaderScreen(
 
   var showFontSizeSheet by remember { mutableStateOf(false) }
 
-  LaunchedEffect(juzNumber, initialAyahIndex) {
-    viewModel.loadJuz(juzNumber, initialAyahIndex)
+  LaunchedEffect(juzNumber, surahNumber, initialAyahIndex) {
+    if (surahNumber > 0) {
+      viewModel.loadSurah(surahNumber, initialAyahIndex)
+    } else {
+      viewModel.loadJuz(juzNumber.coerceIn(1, 30), initialAyahIndex)
+    }
   }
 
   // Toggle-based View State Manager
@@ -123,94 +132,119 @@ fun QuranReaderScreen(
     onAyahChanged = { index -> viewModel.onAyahVisible(index) }
   )
 
-  Scaffold(
-    topBar = {
-      TopAppBar(
-        title = {
-          Column {
-            Text(
-              text = "Juz ${juzNumber} • ${uiState.currentJuz?.transliteration ?: ""}",
-              style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-              color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-              text = uiState.currentJuz?.arabicName ?: "",
-              fontFamily = AmiriFontFamily,
-              style = MaterialTheme.typography.bodySmall,
-              color = MaterialTheme.colorScheme.primary
-            )
-          }
-        },
-        navigationIcon = {
-          IconButton(
-            onClick = onNavigateBack,
-            modifier = Modifier.testTag("reader_back_button")
-          ) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back to Home",
-              tint = MaterialTheme.colorScheme.onSurface
-            )
-          }
-        },
-        actions = {
-          // Quick Toggle Button: toggles between Continuous Scroll and Swipe / Page-Turn
-          IconButton(
-            onClick = { viewStateManager.toggleMode() },
-            modifier = Modifier.testTag("reader_mode_toggle_button")
-          ) {
-            Icon(
-              imageVector = if (viewStateManager.currentMode == ReadingMode.CONTINUOUS) {
-                Icons.Default.ViewStream
-              } else {
-                Icons.Default.AutoStories
-              },
-              contentDescription = if (viewStateManager.currentMode == ReadingMode.CONTINUOUS) {
-                "Switch to Page-Turn Mode"
-              } else {
-                "Switch to Continuous Scroll Mode"
-              },
-              tint = Color(0xFFDFC07C)
-            )
-          }
+  val noorColors = LocalNoorColors.current
 
-          // Auto Scroll Toggle (only active in Continuous mode)
-          if (viewStateManager.currentMode == ReadingMode.CONTINUOUS) {
-            val isScrolling = uiState.isAutoScrollActive && uiState.isAutoScrollPlaying
-            IconButton(
-              onClick = {
-                if (uiState.isAutoScrollActive && !uiState.isAutoScrollPlaying) {
-                  viewModel.resumeAutoScroll()
-                } else {
-                  viewModel.toggleAutoScroll()
-                }
-              },
-              modifier = Modifier.testTag("auto_scroll_button")
-            ) {
-              Icon(
-                imageVector = if (isScrolling) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = if (isScrolling) "Pause Auto Scroll" else "Start Auto Scroll",
-                tint = if (isScrolling) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant
+  Scaffold(
+    containerColor = MaterialTheme.colorScheme.background,
+    topBar = {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .background(noorColors.topBarBrush)
+      ) {
+        TopAppBar(
+          title = {
+            val activeSurah = uiState.currentSurah
+            val activeJuz = uiState.currentJuz
+            Column {
+              Text(
+                text = when {
+                  activeSurah != null -> "Surah ${activeSurah.number} • ${activeSurah.nameSimple}"
+                  surahNumber > 0 -> "Surah $surahNumber"
+                  else -> "Juz ${juzNumber.coerceIn(1, 30)} • ${activeJuz?.transliteration ?: ""}"
+                },
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
+              )
+              Text(
+                text = activeSurah?.nameArabic ?: activeJuz?.arabicName ?: "",
+                fontFamily = AmiriFontFamily,
+                style = MaterialTheme.typography.bodySmall,
+                color = noorColors.surahArabicSubtitleText,
+                maxLines = 1
               )
             }
-          }
+          },
+          navigationIcon = {
+            IconButton(
+              onClick = onNavigateBack,
+              modifier = Modifier.testTag("reader_back_button")
+            ) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back to Home",
+                tint = MaterialTheme.colorScheme.onSurface
+              )
+            }
+          },
+          actions = {
+            // Quick Toggle Button: toggles between Continuous Scroll and Swipe / Page-Turn
+            IconButton(
+              onClick = { viewStateManager.toggleMode() },
+              modifier = Modifier.testTag("reader_mode_toggle_button")
+            ) {
+              Icon(
+                imageVector = if (viewStateManager.currentMode == ReadingMode.CONTINUOUS) {
+                  Icons.Default.ViewStream
+                } else {
+                  Icons.Default.AutoStories
+                },
+                contentDescription = if (viewStateManager.currentMode == ReadingMode.CONTINUOUS) {
+                  "Switch to Page-Turn Mode"
+                } else {
+                  "Switch to Continuous Scroll Mode"
+                },
+                tint = noorColors.primaryGold
+              )
+            }
 
-          // Font Sizing Sheet (TT button)
-          IconButton(
-            onClick = { showFontSizeSheet = true },
-            modifier = Modifier.testTag("font_size_sheet_button")
-          ) {
-            Icon(
-              imageVector = Icons.Default.FormatSize,
-              contentDescription = "Adjust Font Sizes",
-              tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-          }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-          containerColor = MaterialTheme.colorScheme.surface
+            // Auto Scroll Toggle (only active in Continuous mode)
+            if (viewStateManager.currentMode == ReadingMode.CONTINUOUS) {
+              val isScrolling = uiState.isAutoScrollActive && uiState.isAutoScrollPlaying
+              IconButton(
+                onClick = {
+                  if (uiState.isAutoScrollActive && !uiState.isAutoScrollPlaying) {
+                    viewModel.resumeAutoScroll()
+                  } else {
+                    viewModel.toggleAutoScroll()
+                  }
+                },
+                modifier = Modifier.testTag("auto_scroll_button")
+              ) {
+                Icon(
+                  imageVector = if (isScrolling) Icons.Default.Pause else Icons.Default.PlayArrow,
+                  contentDescription = if (isScrolling) "Pause Auto Scroll" else "Start Auto Scroll",
+                  tint = if (isScrolling) MaterialTheme.colorScheme.secondary else noorColors.topBarActionIconTint
+                )
+              }
+            }
+
+            // Font Sizing Sheet (TT button)
+            IconButton(
+              onClick = { showFontSizeSheet = true },
+              modifier = Modifier.testTag("font_size_sheet_button")
+            ) {
+              Icon(
+                imageVector = Icons.Default.FormatSize,
+                contentDescription = "Adjust Font Sizes",
+                tint = noorColors.topBarActionIconTint
+              )
+            }
+          },
+          colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent
+          )
         )
-      )
+        if (noorColors.isDark) {
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(1.dp)
+              .background(noorColors.cardBorder)
+          )
+        }
+      }
     },
     modifier = modifier
   ) { innerPadding ->
@@ -277,6 +311,7 @@ fun QuranReaderScreen(
                     bookmarkedKeys = uiState.bookmarkedVerseKeys,
                     arabicFontSize = arabicFontSize,
                     translationFontSize = translationFontSize,
+                    mushafScript = uiState.mushafScript,
                     isAutoScrollActive = uiState.isAutoScrollActive,
                     isAutoScrollPlaying = uiState.isAutoScrollPlaying,
                     autoScrollSpeed = autoScrollSpeed,
@@ -292,6 +327,7 @@ fun QuranReaderScreen(
                     bookmarkedKeys = uiState.bookmarkedVerseKeys,
                     arabicFontSize = arabicFontSize,
                     translationFontSize = translationFontSize,
+                    mushafScript = uiState.mushafScript,
                     onToggleBookmark = { ayah -> viewModel.toggleBookmark(ayah) },
                     onPageChanged = { index -> viewStateManager.onAyahVisible(index) }
                   )
@@ -429,8 +465,8 @@ fun QuranReaderScreen(
           modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+            .background(if (noorColors.isDark) noorColors.innerCardBackground else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .border(1.dp, noorColors.cardBorder, RoundedCornerShape(14.dp))
             .padding(14.dp)
         ) {
           Column(modifier = Modifier.fillMaxWidth()) {
@@ -442,11 +478,16 @@ fun QuranReaderScreen(
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-              text = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ",
-              fontFamily = AmiriFontFamily,
+              text = if (uiState.mushafScript == MushafScript.INDOPAK) {
+                "بِسۡمِ اللهِ الرَّحۡمٰنِ الرَّحِيۡمِ"
+              } else {
+                "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"
+              },
+              fontFamily = uiState.mushafScript.quranFontFamily(),
               fontSize = arabicFontSize.sp,
-              fontWeight = FontWeight.Bold,
-              color = MaterialTheme.colorScheme.primary,
+              fontWeight = FontWeight.Normal,
+              lineHeight = (arabicFontSize * uiState.mushafScript.lineHeightMultiplier()).sp,
+              color = if (noorColors.isDark) noorColors.fullAyahArabicText else MaterialTheme.colorScheme.primary,
               textAlign = TextAlign.Right,
               modifier = Modifier.fillMaxWidth()
             )
@@ -473,6 +514,7 @@ private fun ContinuousReaderView(
   bookmarkedKeys: Set<String>,
   arabicFontSize: Float,
   translationFontSize: Float,
+  mushafScript: MushafScript,
   isAutoScrollActive: Boolean,
   isAutoScrollPlaying: Boolean,
   autoScrollSpeed: Float,
@@ -555,7 +597,8 @@ private fun ContinuousReaderView(
         isBookmarked = bookmarkedKeys.contains(ayah.verseKey),
         onToggleBookmark = { onToggleBookmark(ayah) },
         arabicFontSize = arabicFontSize,
-        translationFontSize = translationFontSize
+        translationFontSize = translationFontSize,
+        mushafScript = mushafScript
       )
     }
   }
@@ -575,6 +618,7 @@ private fun SwipeReaderView(
   bookmarkedKeys: Set<String>,
   arabicFontSize: Float,
   translationFontSize: Float,
+  mushafScript: MushafScript,
   onToggleBookmark: (com.example.model.Ayah) -> Unit,
   onPageChanged: (Int) -> Unit
 ) {
@@ -618,70 +662,92 @@ private fun SwipeReaderView(
               isBookmarked = bookmarkedKeys.contains(ayah.verseKey),
               onToggleBookmark = { onToggleBookmark(ayah) },
               arabicFontSize = arabicFontSize,
-              translationFontSize = translationFontSize
+              translationFontSize = translationFontSize,
+              mushafScript = mushafScript
             )
           }
         }
       }
 
       // Bottom Navigation Bar for Page-Turn Mode matching Arabic Mushaf order
-      Box(
+      val noorColors = LocalNoorColors.current
+      Column(
         modifier = Modifier
           .fillMaxWidth()
-          .background(MaterialTheme.colorScheme.surface)
-          .padding(horizontal = 16.dp, vertical = 12.dp)
+          .background(noorColors.topBarBrush)
       ) {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
-        ) {
-          // Previous Ayah Button
-          IconButton(
-            onClick = {
-              if (pagerState.currentPage > 0) {
-                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
-              }
-            },
-            enabled = pagerState.currentPage > 0,
-            modifier = Modifier.testTag("swipe_prev_ayah_button")
-          ) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Previous Ayah",
-              tint = if (pagerState.currentPage > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-            )
-          }
-
-          // Center: Ayah progress indicator
+        if (noorColors.isDark) {
           Box(
             modifier = Modifier
-              .clip(RoundedCornerShape(12.dp))
-              .background(MaterialTheme.colorScheme.surfaceVariant)
-              .padding(horizontal = 14.dp, vertical = 6.dp)
+              .fillMaxWidth()
+              .height(1.dp)
+              .background(noorColors.cardBorder)
+          )
+        }
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
           ) {
-            Text(
-              text = "Ayah ${pagerState.currentPage + 1} of ${ayahs.size}",
-              style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-              color = MaterialTheme.colorScheme.onSurface
-            )
-          }
+            // Previous Ayah Button
+            IconButton(
+              onClick = {
+                if (pagerState.currentPage > 0) {
+                  scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+                }
+              },
+              enabled = pagerState.currentPage > 0,
+              modifier = Modifier.testTag("swipe_prev_ayah_button")
+            ) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Previous Ayah",
+                tint = if (pagerState.currentPage > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+              )
+            }
 
-          // Next Ayah Button
-          IconButton(
-            onClick = {
-              if (pagerState.currentPage < ayahs.size - 1) {
-                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
-              }
-            },
-            enabled = pagerState.currentPage < ayahs.size - 1,
-            modifier = Modifier.testTag("swipe_next_ayah_button")
-          ) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-              contentDescription = "Next Ayah",
-              tint = if (pagerState.currentPage < ayahs.size - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-            )
+            // Center: Ayah progress indicator
+            Box(
+              modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(if (noorColors.isDark) noorColors.badgeBackground else MaterialTheme.colorScheme.surfaceVariant)
+                .then(
+                  if (noorColors.isDark) {
+                    Modifier.border(1.dp, noorColors.badgeBorder, RoundedCornerShape(12.dp))
+                  } else {
+                    Modifier
+                  }
+                )
+                .padding(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+              Text(
+                text = "Ayah ${pagerState.currentPage + 1} of ${ayahs.size}",
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = if (noorColors.isDark) noorColors.badgeText else MaterialTheme.colorScheme.onSurface
+              )
+            }
+
+            // Next Ayah Button
+            IconButton(
+              onClick = {
+                if (pagerState.currentPage < ayahs.size - 1) {
+                  scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+                }
+              },
+              enabled = pagerState.currentPage < ayahs.size - 1,
+              modifier = Modifier.testTag("swipe_next_ayah_button")
+            ) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Next Ayah",
+                tint = if (pagerState.currentPage < ayahs.size - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+              )
+            }
           }
         }
       }

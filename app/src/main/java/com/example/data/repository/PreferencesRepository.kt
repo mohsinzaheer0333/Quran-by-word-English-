@@ -3,6 +3,8 @@ package com.example.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.model.LastReadPosition
+import com.example.model.MushafPaperMode
+import com.example.model.MushafScript
 import com.example.model.ReadingMode
 import com.example.model.ThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +36,21 @@ class PreferencesRepository(context: Context) {
   private val _lastReadPosition = MutableStateFlow(getStoredLastRead())
   val lastReadPosition: StateFlow<LastReadPosition> = _lastReadPosition.asStateFlow()
 
+  private val _mushafScript = MutableStateFlow(getStoredMushafScript())
+  val mushafScript: StateFlow<MushafScript> = _mushafScript.asStateFlow()
+
+  private val _mushafPaperMode = MutableStateFlow(getStoredMushafPaperMode())
+  val mushafPaperMode: StateFlow<MushafPaperMode> = _mushafPaperMode.asStateFlow()
+
+  private val _mushafPageMadinah = MutableStateFlow(prefs.getInt(KEY_MUSHAF_PAGE_MADINAH, 1).coerceIn(1, 604))
+  val mushafPageMadinah: StateFlow<Int> = _mushafPageMadinah.asStateFlow()
+
+  private val _mushafPageIndopak = MutableStateFlow(prefs.getInt(KEY_MUSHAF_PAGE_INDOPAK, 1).coerceIn(1, 548))
+  val mushafPageIndopak: StateFlow<Int> = _mushafPageIndopak.asStateFlow()
+
+  private val _tajweedEnabled = MutableStateFlow(prefs.getBoolean(KEY_MUSHAF_TAJWEED_ENABLED, true))
+  val tajweedEnabled: StateFlow<Boolean> = _tajweedEnabled.asStateFlow()
+
   private fun getStoredThemeMode(): ThemeMode {
     val name = prefs.getString(KEY_THEME, ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name
     return try {
@@ -49,6 +66,25 @@ class PreferencesRepository(context: Context) {
       ReadingMode.valueOf(name)
     } catch (_: Exception) {
       ReadingMode.CONTINUOUS
+    }
+  }
+
+  private fun getStoredMushafScript(): MushafScript {
+    val name = prefs.getString(KEY_MUSHAF_SCRIPT, MushafScript.UTHMANI.name) ?: MushafScript.UTHMANI.name
+    return try {
+      MushafScript.valueOf(name)
+    } catch (_: Exception) {
+      MushafScript.UTHMANI
+    }
+  }
+
+  private fun getStoredMushafPaperMode(): MushafPaperMode {
+    val name = prefs.getString(KEY_MUSHAF_PAPER_MODE, MushafPaperMode.MIDNIGHT_NAVY.name)
+      ?: MushafPaperMode.MIDNIGHT_NAVY.name
+    return try {
+      MushafPaperMode.valueOf(name)
+    } catch (_: Exception) {
+      MushafPaperMode.MIDNIGHT_NAVY
     }
   }
 
@@ -95,6 +131,36 @@ class PreferencesRepository(context: Context) {
     _autoScrollSpeed.value = clamped
   }
 
+  fun setMushafScript(script: MushafScript) {
+    prefs.edit().putString(KEY_MUSHAF_SCRIPT, script.name).apply()
+    _mushafScript.value = script
+  }
+
+  fun setMushafPaperMode(mode: MushafPaperMode) {
+    prefs.edit().putString(KEY_MUSHAF_PAPER_MODE, mode.name).apply()
+    _mushafPaperMode.value = mode
+  }
+
+  fun setMushafPage(script: MushafScript, pageNumber: Int) {
+    when (script) {
+      MushafScript.UTHMANI -> {
+        val clamped = pageNumber.coerceIn(1, 604)
+        prefs.edit().putInt(KEY_MUSHAF_PAGE_MADINAH, clamped).apply()
+        _mushafPageMadinah.value = clamped
+      }
+      MushafScript.INDOPAK -> {
+        val clamped = pageNumber.coerceIn(1, 548)
+        prefs.edit().putInt(KEY_MUSHAF_PAGE_INDOPAK, clamped).apply()
+        _mushafPageIndopak.value = clamped
+      }
+    }
+  }
+
+  fun setTajweedEnabled(enabled: Boolean) {
+    prefs.edit().putBoolean(KEY_MUSHAF_TAJWEED_ENABLED, enabled).apply()
+    _tajweedEnabled.value = enabled
+  }
+
   fun saveLastRead(position: LastReadPosition) {
     val current = _lastReadPosition.value
     if (current.juzNumber == position.juzNumber &&
@@ -126,5 +192,10 @@ class PreferencesRepository(context: Context) {
     private const val KEY_LAST_SURAH_ENGLISH = "key_last_surah_english"
     private const val KEY_LAST_AYAH = "key_last_ayah"
     private const val KEY_LAST_TIME = "key_last_time"
+    private const val KEY_MUSHAF_SCRIPT = "key_mushaf_script"
+    private const val KEY_MUSHAF_PAPER_MODE = "key_mushaf_paper_mode"
+    private const val KEY_MUSHAF_PAGE_MADINAH = "key_mushaf_page_madinah"
+    private const val KEY_MUSHAF_PAGE_INDOPAK = "key_mushaf_page_indopak"
+    private const val KEY_MUSHAF_TAJWEED_ENABLED = "key_mushaf_tajweed_enabled"
   }
 }

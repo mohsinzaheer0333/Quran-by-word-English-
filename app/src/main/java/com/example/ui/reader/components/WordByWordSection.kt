@@ -2,6 +2,7 @@ package com.example.ui.reader.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,15 +34,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.model.MushafScript
 import com.example.model.WordTranslation
-import com.example.ui.theme.AmiriFontFamily
+import com.example.ui.theme.LocalNoorColors
 import com.example.ui.theme.OutfitFontFamily
+import com.example.ui.theme.lineHeightMultiplier
+import com.example.ui.theme.quranFontFamily
 
 private val WordCardShape = RoundedCornerShape(12.dp)
 private val WordHeaderBadgeShape = RoundedCornerShape(4.dp)
 
 /**
- * Ultra-fast word-by-word layout with clean English translations.
+ * Ultra-fast word-by-word layout with clean English translations and tap-to-highlight state.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -45,8 +53,12 @@ fun WordByWordSection(
   words: List<WordTranslation>,
   arabicFontSize: Float = 24f,
   translationFontSize: Float = 13f,
+  mushafScript: MushafScript = MushafScript.UTHMANI,
   modifier: Modifier = Modifier
 ) {
+  val noorColors = LocalNoorColors.current
+  var selectedWordPosition by remember(words) { mutableStateOf<Int?>(null) }
+
   Column(modifier = modifier.fillMaxWidth()) {
     // Section Header
     Row(
@@ -56,7 +68,14 @@ fun WordByWordSection(
       Box(
         modifier = Modifier
           .clip(WordHeaderBadgeShape)
-          .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f))
+          .background(noorColors.sectionPillBackground)
+          .then(
+            if (noorColors.isDark) {
+              Modifier.border(1.dp, noorColors.sectionPillBorder, WordHeaderBadgeShape)
+            } else {
+              Modifier
+            }
+          )
           .padding(horizontal = 8.dp, vertical = 3.dp)
       ) {
         Text(
@@ -66,7 +85,7 @@ fun WordByWordSection(
             letterSpacing = 1.1.sp,
             fontWeight = FontWeight.Bold
           ),
-          color = MaterialTheme.colorScheme.secondary,
+          color = noorColors.sectionPillText,
           fontSize = 10.sp
         )
       }
@@ -81,10 +100,16 @@ fun WordByWordSection(
       ) {
         words.forEach { word ->
           key(word.position) {
+            val isSelected = selectedWordPosition == word.position
             WordCard(
               word = word,
               arabicFontSize = arabicFontSize,
-              translationFontSize = translationFontSize
+              translationFontSize = translationFontSize,
+              mushafScript = mushafScript,
+              isSelected = isSelected,
+              onClick = {
+                selectedWordPosition = if (isSelected) null else word.position
+              }
             )
           }
         }
@@ -98,32 +123,38 @@ fun WordCard(
   word: WordTranslation,
   arabicFontSize: Float,
   translationFontSize: Float,
+  mushafScript: MushafScript = MushafScript.UTHMANI,
+  isSelected: Boolean = false,
+  onClick: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
+  val noorColors = LocalNoorColors.current
+
   Column(
     modifier = modifier
       .widthIn(min = 64.dp)
       .graphicsLayer() // GPU hardware layer isolation
       .clip(WordCardShape)
-      .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f))
+      .background(if (isSelected) noorColors.activeWordCardBackground else noorColors.wordCardBackground)
       .border(
         width = 1.dp,
-        color = MaterialTheme.colorScheme.outlineVariant,
+        color = if (isSelected) noorColors.activeWordCardBorder else noorColors.cardBorder,
         shape = WordCardShape
       )
+      .clickable(onClick = onClick)
       .padding(horizontal = 10.dp, vertical = 7.dp),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center
   ) {
-    // Arabic Word on top
+    // Arabic Word on top in active Mushaf script
     Text(
-      text = word.arabic,
-      fontFamily = AmiriFontFamily,
+      text = word.arabicFor(mushafScript),
+      fontFamily = mushafScript.quranFontFamily(),
       fontSize = arabicFontSize.sp,
-      fontWeight = FontWeight.Bold,
-      color = MaterialTheme.colorScheme.primary,
+      fontWeight = FontWeight.Normal,
+      color = if (isSelected) noorColors.wordArabicActiveText else noorColors.wordArabicText,
       textAlign = TextAlign.Center,
-      lineHeight = (arabicFontSize * 1.45f).sp
+      lineHeight = (arabicFontSize * mushafScript.lineHeightMultiplier()).sp
     )
 
     Spacer(modifier = Modifier.height(3.dp))
@@ -134,7 +165,7 @@ fun WordCard(
       fontFamily = OutfitFontFamily,
       fontSize = translationFontSize.sp,
       fontWeight = FontWeight.Normal,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
+      color = noorColors.wordEnglishText,
       textAlign = TextAlign.Center,
       style = MaterialTheme.typography.bodySmall,
       lineHeight = (translationFontSize * 1.3f).sp

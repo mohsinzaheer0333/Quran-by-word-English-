@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.JuzInfo
 import com.example.ui.theme.AmiriFontFamily
+import com.example.ui.theme.LocalNoorColors
 
 private val JuzCardShape = RoundedCornerShape(18.dp)
 private val MedallionShape = RoundedCornerShape(12.dp)
@@ -42,6 +43,8 @@ fun JuzCard(
   onClick: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val noorColors = LocalNoorColors.current
+
   Card(
     modifier = modifier
       .fillMaxWidth()
@@ -51,16 +54,16 @@ fun JuzCard(
       .clickable { onClick() },
     shape = JuzCardShape,
     colors = CardDefaults.cardColors(
-      containerColor = MaterialTheme.colorScheme.surface
+      containerColor = noorColors.innerCardBackground
     ),
-    elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+    elevation = CardDefaults.cardElevation(defaultElevation = if (noorColors.isDark) 0.dp else 1.5.dp)
   ) {
     Box(
       modifier = Modifier
         .fillMaxWidth()
         .border(
           width = 1.dp,
-          color = MaterialTheme.colorScheme.outlineVariant,
+          color = noorColors.cardBorder,
           shape = JuzCardShape
         )
         .padding(14.dp)
@@ -74,10 +77,10 @@ fun JuzCard(
           modifier = Modifier
             .size(46.dp)
             .clip(MedallionShape)
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .background(noorColors.badgeBackground)
             .border(
               width = 1.dp,
-              color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+              color = if (noorColors.isDark) noorColors.badgeBorder else MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
               shape = MedallionShape
             ),
           contentAlignment = Alignment.Center
@@ -97,7 +100,7 @@ fun JuzCard(
               text = "${juz.number}",
               style = MaterialTheme.typography.titleMedium,
               fontWeight = FontWeight.Bold,
-              color = MaterialTheme.colorScheme.onPrimaryContainer
+              color = noorColors.badgeText
             )
           }
         }
@@ -125,13 +128,22 @@ fun JuzCard(
           Box(
             modifier = Modifier
               .clip(VersesBadgeShape)
-              .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+              .background(
+                if (noorColors.isDark) noorColors.badgeBackground else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+              )
+              .then(
+                if (noorColors.isDark) {
+                  Modifier.border(1.dp, noorColors.badgeBorder, VersesBadgeShape)
+                } else {
+                  Modifier
+                }
+              )
               .padding(horizontal = 6.dp, vertical = 2.dp)
           ) {
             Text(
               text = "${juz.totalVerses} Verses",
               style = MaterialTheme.typography.labelSmall,
-              color = MaterialTheme.colorScheme.primary,
+              color = if (noorColors.isDark) noorColors.badgeText else MaterialTheme.colorScheme.primary,
               fontSize = 10.sp
             )
           }
@@ -145,7 +157,7 @@ fun JuzCard(
           fontFamily = AmiriFontFamily,
           fontSize = 24.sp,
           fontWeight = FontWeight.Bold,
-          color = MaterialTheme.colorScheme.primary,
+          color = noorColors.juzArabicNameText,
           textAlign = TextAlign.End,
           modifier = Modifier.padding(end = 4.dp)
         )

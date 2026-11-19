@@ -17,10 +17,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.LocalNoorColors
 import com.example.ui.theme.OutfitFontFamily
 
 private val TranslationBoxShape = RoundedCornerShape(14.dp)
@@ -32,40 +36,53 @@ fun TranslationSection(
   fontSize: Float = 16f,
   modifier: Modifier = Modifier
 ) {
+  val noorColors = LocalNoorColors.current
+
   Box(
     modifier = modifier
       .fillMaxWidth()
       .graphicsLayer()
       .clip(TranslationBoxShape)
-      .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+      .background(noorColors.translationBoxBackground)
       .border(
         width = 1.dp,
-        color = MaterialTheme.colorScheme.outlineVariant,
+        color = noorColors.cardBorder,
         shape = TranslationBoxShape
       )
       .padding(14.dp)
   ) {
     Row(modifier = Modifier.fillMaxWidth()) {
-      // Elegant Left Accent Bar
+      // Elegant Left Accent Bar (Vertical gradient #F2D98D -> #B88929 in Dark Mode)
       Box(
         modifier = Modifier
           .width(3.5.dp)
           .height(34.dp)
           .clip(AccentBarShape)
-          .background(MaterialTheme.colorScheme.secondary)
+          .background(noorColors.translationAccentBrush)
       )
 
       Spacer(modifier = Modifier.width(12.dp))
 
       Column(modifier = Modifier.weight(1f)) {
         Text(
-          text = "TRANSLATION (Sahih International)",
+          text = buildAnnotatedString {
+            withStyle(SpanStyle(color = MaterialTheme.colorScheme.secondary)) {
+              append("TRANSLATION ")
+            }
+            withStyle(
+              SpanStyle(
+                color = if (noorColors.isDark) noorColors.mutedText else MaterialTheme.colorScheme.secondary,
+                fontWeight = if (noorColors.isDark) FontWeight.Medium else FontWeight.Bold
+              )
+            ) {
+              append("(Sahih International)")
+            }
+          },
           fontFamily = OutfitFontFamily,
           style = MaterialTheme.typography.labelSmall.copy(
             letterSpacing = 1.1.sp,
             fontWeight = FontWeight.Bold
           ),
-          color = MaterialTheme.colorScheme.secondary,
           fontSize = 10.sp
         )
 

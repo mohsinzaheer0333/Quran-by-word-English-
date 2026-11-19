@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.LocalNoorColors
 
 @Composable
 fun AutoScrollControls(
@@ -44,22 +45,27 @@ fun AutoScrollControls(
   onClose: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val noorColors = LocalNoorColors.current
+
   Card(
     modifier = modifier
       .fillMaxWidth()
       .testTag("auto_scroll_controls")
       .clip(RoundedCornerShape(24.dp)),
     colors = CardDefaults.cardColors(
-      containerColor = MaterialTheme.colorScheme.surface
+      containerColor = if (noorColors.isDark) noorColors.outerContainerStart else MaterialTheme.colorScheme.surface
     ),
     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
   ) {
     Box(
       modifier = Modifier
         .fillMaxWidth()
+        .then(
+          if (noorColors.isDark) Modifier.background(noorColors.outerContainerBrush) else Modifier
+        )
         .border(
           width = 1.dp,
-          color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f),
+          color = if (noorColors.isDark) noorColors.badgeBorder else MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f),
           shape = RoundedCornerShape(24.dp)
         )
         .padding(horizontal = 14.dp, vertical = 8.dp)
@@ -91,7 +97,14 @@ fun AutoScrollControls(
           verticalAlignment = Alignment.CenterVertically,
           modifier = Modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(if (noorColors.isDark) noorColors.innerCardBackground else MaterialTheme.colorScheme.surfaceVariant)
+            .then(
+              if (noorColors.isDark) {
+                Modifier.border(1.dp, noorColors.cardBorder, RoundedCornerShape(14.dp))
+              } else {
+                Modifier
+              }
+            )
             .padding(horizontal = 4.dp, vertical = 2.dp)
         ) {
           IconButton(
@@ -131,7 +144,7 @@ fun AutoScrollControls(
                   else -> "Very Fast"
                 },
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary,
+                color = if (noorColors.isDark) noorColors.lightGold else MaterialTheme.colorScheme.secondary,
                 fontSize = 9.sp
               )
             }

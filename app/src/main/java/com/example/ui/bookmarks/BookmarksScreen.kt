@@ -43,8 +43,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
 import com.example.data.local.BookmarkEntity
-import com.example.ui.theme.AmiriFontFamily
+import com.example.model.MushafScript
+import com.example.ui.theme.LocalNoorColors
+import com.example.ui.theme.quranFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,38 +56,56 @@ fun BookmarksScreen(
   onOpenAyah: (Int, Int) -> Unit,
   onDeleteBookmark: (Long) -> Unit,
   onNavigateBack: () -> Unit,
+  mushafScript: MushafScript = MushafScript.UTHMANI,
   modifier: Modifier = Modifier
 ) {
   BackHandler {
     onNavigateBack()
   }
 
+  val noorColors = LocalNoorColors.current
+
   Scaffold(
+    containerColor = MaterialTheme.colorScheme.background,
     topBar = {
-      TopAppBar(
-        title = {
-          Text(
-            text = "Saved Bookmarks",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface
-          )
-        },
-        navigationIcon = {
-          IconButton(
-            onClick = onNavigateBack,
-            modifier = Modifier.testTag("bookmarks_back_button")
-          ) {
-            Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back",
-              tint = MaterialTheme.colorScheme.onSurface
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .background(noorColors.topBarBrush)
+      ) {
+        TopAppBar(
+          title = {
+            Text(
+              text = "Saved Bookmarks",
+              style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+              color = MaterialTheme.colorScheme.onSurface
             )
-          }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-          containerColor = MaterialTheme.colorScheme.surface
+          },
+          navigationIcon = {
+            IconButton(
+              onClick = onNavigateBack,
+              modifier = Modifier.testTag("bookmarks_back_button")
+            ) {
+              Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = MaterialTheme.colorScheme.onSurface
+              )
+            }
+          },
+          colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent
+          )
         )
-      )
+        if (noorColors.isDark) {
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(1.dp)
+              .background(noorColors.cardBorder)
+          )
+        }
+      }
     },
     modifier = modifier
   ) { innerPadding ->
@@ -148,6 +169,7 @@ fun BookmarksScreen(
           ) { bookmark ->
             BookmarkItemCard(
               bookmark = bookmark,
+              mushafScript = mushafScript,
               onClick = {
                 onOpenAyah(bookmark.juzNumber, (bookmark.ayahNumber - 1).coerceAtLeast(0))
               },
@@ -163,10 +185,13 @@ fun BookmarksScreen(
 @Composable
 private fun BookmarkItemCard(
   bookmark: BookmarkEntity,
+  mushafScript: MushafScript,
   onClick: () -> Unit,
   onDelete: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val noorColors = LocalNoorColors.current
+
   Card(
     modifier = modifier
       .fillMaxWidth()
@@ -174,16 +199,16 @@ private fun BookmarkItemCard(
       .clip(RoundedCornerShape(16.dp))
       .clickable { onClick() },
     colors = CardDefaults.cardColors(
-      containerColor = MaterialTheme.colorScheme.surface
+      containerColor = noorColors.innerCardBackground
     ),
-    elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+    elevation = CardDefaults.cardElevation(defaultElevation = if (noorColors.isDark) 0.dp else 1.5.dp)
   ) {
     Box(
       modifier = Modifier
         .fillMaxWidth()
         .border(
           width = 1.dp,
-          color = MaterialTheme.colorScheme.outlineVariant,
+          color = noorColors.cardBorder,
           shape = RoundedCornerShape(16.dp)
         )
         .padding(16.dp)
@@ -198,13 +223,20 @@ private fun BookmarkItemCard(
             Box(
               modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .background(noorColors.badgeBackground)
+                .then(
+                  if (noorColors.isDark) {
+                    Modifier.border(1.dp, noorColors.badgeBorder, RoundedCornerShape(8.dp))
+                  } else {
+                    Modifier
+                  }
+                )
                 .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
               Text(
                 text = "Juz ${bookmark.juzNumber}",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = noorColors.badgeText
               )
             }
 
@@ -234,9 +266,9 @@ private fun BookmarkItemCard(
         // Arabic text snippet
         Text(
           text = bookmark.arabicTextPreview,
-          fontFamily = AmiriFontFamily,
+          fontFamily = mushafScript.quranFontFamily(),
           fontSize = 20.sp,
-          color = MaterialTheme.colorScheme.primary,
+          color = if (noorColors.isDark) noorColors.fullAyahArabicText else MaterialTheme.colorScheme.primary,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis
         )
